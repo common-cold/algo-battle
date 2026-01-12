@@ -1,0 +1,12 @@
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+CREATE TYPE ROLE AS ENUM('Examiner', 'Candidate');
+
+CREATE TABLE USERS (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name TEXT NOT NULL,
+    email TEXT UNIQUE NOT NULL,
+    password TEXT NOT NULL,
+    role ROLE NOT NULL,
+    created_at BIGINT NOT NULL DEFAULT EXTRACT(EPOCH FROM NOW())
+)
