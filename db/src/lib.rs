@@ -1,8 +1,8 @@
 use std::env;
 
 use anyhow::Ok;
-use common::{Contest, ContestStatus, CreateContestArgs, CreateQuestionArgs, CreateUserArgs, Question, QuestionType, Role, User};
-use sqlx::{Pool, Postgres, postgres::PgPoolOptions};
+use common::{Contest, ContestStatus, CreateContestArgs, CreateQuestionArgs, CreateUserArgs, GetContestArgs, Question, QuestionType, Role, User};
+use sqlx::{Pool, Postgres, postgres::PgPoolOptions, types::Uuid};
 use dotenv::dotenv;
 
 
@@ -61,9 +61,11 @@ impl Database {
                     description, 
                     options,
                     correct_option,
+                    time_limit,
+                    points,
                     owner_id
                 )
-                VALUES ($1, $2, $3, $4, $5, $6)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
                 RETURNING 
                     id, 
                     question_type AS "question_type: QuestionType", 
@@ -71,6 +73,8 @@ impl Database {
                     description, 
                     options,
                     correct_option,
+                    time_limit,
+                    points,
                     owner_id,
                     created_at
             "#,
@@ -79,12 +83,64 @@ impl Database {
             args.description,
             args.options.as_slice(),
             args.correct_option,
+            args.time_limit,
+            args.points,
             args.owner_id
         )
         .fetch_one(&self.pool)
         .await?;
 
         Ok(question)
+    }
+
+    pub async fn get_questions_by_id(&self, question_ids: Vec<Uuid>) -> anyhow::Result<Vec<Question>> {
+        let questions = sqlx::query_as!(
+            Question,
+            r#"
+                SELECT 
+                    id,
+                    question_type AS "question_type: QuestionType",
+                    title,
+                    description,
+                    options,
+                    correct_option,
+                    time_limit,
+                    points,
+                    owner_id,
+                    created_at
+                FROM QUESTIONS WHERE
+                   id = ANY($1)     
+            "#,
+            &question_ids
+        ).fetch_all(&self.pool)
+        .await?;
+        
+        Ok(questions)
+    }
+
+    pub async fn get_all_examiner_questions(&self, examiner_id: Uuid) -> anyhow::Result<Vec<Question>> {
+        let questions = sqlx::query_as!(
+            Question,
+            r#"
+                SELECT 
+                    id,
+                    question_type AS "question_type: QuestionType",
+                    title,
+                    description,
+                    options,
+                    correct_option,
+                    time_limit,
+                    points,
+                    owner_id,
+                    created_at
+                FROM QUESTIONS WHERE
+                   owner_id = $1     
+            "#,
+            examiner_id
+        ).fetch_all(&self.pool)
+        .await?;
+        
+        Ok(questions)
     }
 
     pub async fn create_contest(&self, args: CreateContestArgs) -> anyhow::Result<Contest> {
@@ -114,12 +170,37 @@ impl Database {
             args.description,
             args.start_date,
             args.end_date,
-            args.status as ContestStatus,
+            ContestStatus::Scheduled as ContestStatus,
             args.owner_id
         )
         .fetch_one(&self.pool)
         .await?;
 
         Ok(contest)
+    }
+
+    pub async fn get_all_examiner_contests(&self, args: GetContestArgs) -> anyhow::Result<Vec<Contest>> {
+        let contests = sqlx::query_as!(
+            Contest,
+            r#"
+                SELECT 
+                    id,
+                    title,
+                    description,
+                    start_date,
+                    end_date,
+                    status AS "status: ContestStatus",
+                    owner_id,
+                    created_at
+                FROM CONTESTS WHERE
+                   owner_id = $1
+                AND status = $2       
+            "#,
+            args.id,
+            args.status as ContestStatus
+        ).fetch_all(&self.pool)
+        .await?;
+        
+        Ok(contests)
     }
 }

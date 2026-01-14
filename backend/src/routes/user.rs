@@ -5,11 +5,11 @@ use serde_json::json;
 use crate::AppData;
 
 #[post("/signup")]
-pub async fn create_user(app_data: Data<AppData>, args: web::Json<CreateUserArgs>) -> HttpResponse {
+pub async fn create_user(app_data: Data<AppData>, body: web::Json<CreateUserArgs>) -> HttpResponse {
     let app_data= app_data.get_ref();
     let db = &app_data.db;
 
-    match db.create_user(args.0).await {
+    match db.create_user(body.0).await {
         Ok(user) => {
             HttpResponse::Ok().json(user)
         }

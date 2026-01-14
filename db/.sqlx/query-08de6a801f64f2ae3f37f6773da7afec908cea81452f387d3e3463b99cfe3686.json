@@ -1,0 +1,87 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                SELECT \n                    id,\n                    title,\n                    description,\n                    start_date,\n                    end_date,\n                    status AS \"status: ContestStatus\",\n                    owner_id,\n                    created_at\n                FROM CONTESTS WHERE\n                   owner_id = $1\n                AND status = $2       \n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "title",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "description",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "start_date",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 4,
+        "name": "end_date",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 5,
+        "name": "status: ContestStatus",
+        "type_info": {
+          "Custom": {
+            "name": "contest_status",
+            "kind": {
+              "Enum": [
+                "Scheduled",
+                "Active",
+                "Closed"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "owner_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 7,
+        "name": "created_at",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        {
+          "Custom": {
+            "name": "contest_status",
+            "kind": {
+              "Enum": [
+                "Scheduled",
+                "Active",
+                "Closed"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "08de6a801f64f2ae3f37f6773da7afec908cea81452f387d3e3463b99cfe3686"
+}

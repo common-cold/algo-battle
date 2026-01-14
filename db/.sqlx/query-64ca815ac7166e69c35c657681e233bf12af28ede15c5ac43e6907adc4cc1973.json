@@ -1,0 +1,105 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                INSERT INTO QUESTIONS (\n                    question_type, \n                    title, \n                    description, \n                    options,\n                    correct_option,\n                    time_limit,\n                    points,\n                    owner_id\n                )\n                VALUES ($1, $2, $3, $4, $5, $6, $7, $8)\n                RETURNING \n                    id, \n                    question_type AS \"question_type: QuestionType\", \n                    title, \n                    description, \n                    options,\n                    correct_option,\n                    time_limit,\n                    points,\n                    owner_id,\n                    created_at\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "question_type: QuestionType",
+        "type_info": {
+          "Custom": {
+            "name": "question_type",
+            "kind": {
+              "Enum": [
+                "Mcq",
+                "Dsa",
+                "LiveAssignment"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "title",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "description",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "options",
+        "type_info": "TextArray"
+      },
+      {
+        "ordinal": 5,
+        "name": "correct_option",
+        "type_info": "Int2"
+      },
+      {
+        "ordinal": 6,
+        "name": "time_limit",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 7,
+        "name": "points",
+        "type_info": "Int2"
+      },
+      {
+        "ordinal": 8,
+        "name": "owner_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 9,
+        "name": "created_at",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        {
+          "Custom": {
+            "name": "question_type",
+            "kind": {
+              "Enum": [
+                "Mcq",
+                "Dsa",
+                "LiveAssignment"
+              ]
+            }
+          }
+        },
+        "Text",
+        "Text",
+        "TextArray",
+        "Int2",
+        "Int8",
+        "Int2",
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "64ca815ac7166e69c35c657681e233bf12af28ede15c5ac43e6907adc4cc1973"
+}

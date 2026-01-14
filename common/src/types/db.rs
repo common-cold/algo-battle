@@ -45,6 +45,8 @@ pub struct Question {
     pub description: String,
     pub options: Vec<String>,
     pub correct_option: i16,
+    pub time_limit: i64,
+    pub points: i16,
     pub owner_id: Uuid,
     pub created_at: i64
 }

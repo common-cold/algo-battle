@@ -14,3 +14,4 @@ serde_json = "1.0.145"
 sqlx = {version = "0.8.6", features = ["postgres", "runtime-tokio", "uuid", "tls-native-tls", "json"]}
 tokio = "1.48.0"
 anyhow = "1.0.100"
+page-hunter = { version = "0.6.0", features = ["serde"] }

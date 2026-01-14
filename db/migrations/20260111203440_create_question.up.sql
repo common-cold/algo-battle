@@ -9,6 +9,8 @@ CREATE TABLE QUESTIONS (
     description TEXT NOT NULL,
     options TEXT[] NOT NULL,
     correct_option SMALLINT NOT NULL,
+    time_limit BIGINT NOT NULL,
+    points SMALLINT NOT NULL,
     owner_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     created_at BIGINT NOT NULL DEFAULT EXTRACT(EPOCH FROM NOW())
 )

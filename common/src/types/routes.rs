@@ -18,7 +18,21 @@ pub struct CreateQuestionArgs {
     pub description: String,
     pub options: Vec<String>,
     pub correct_option: i16,
+    pub time_limit: i64,
+    pub points: i16,
     pub owner_id: Uuid
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GetQuestionArgs {
+    pub page: Option<usize>,
+    pub limit: Option<usize>,
+    pub id: Uuid
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GetQuestionsByIdArgs {
+    pub ids: Vec<Uuid>
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -27,7 +41,14 @@ pub struct CreateContestArgs {
     pub description: String,
     pub start_date: i64,
     pub end_date: i64,
-    pub status: ContestStatus,
     pub owner_id: Uuid,
-    pub created_at: i64
+    pub question_ids: Vec<Uuid>
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GetContestArgs {
+    pub page: Option<usize>,
+    pub limit: Option<usize>,
+    pub id: Uuid,
+    pub status: ContestStatus
 }

@@ -266,6 +266,7 @@ dependencies = [
  "anyhow",
  "common",
  "db",
+ "page-hunter",
  "serde",
  "serde_json",
  "sqlx",
@@ -1314,6 +1315,15 @@ dependencies = [
  "libc",
  "pkg-config",
  "vcpkg",
+]
+
+[[package]]
+name = "page-hunter"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "56a2a4063b976e1e08fcf0fd2d008ff0b6e70f0cc70e71b7f4b111e489298e9e"
+dependencies = [
+ "serde",
 ]
 
 [[package]]

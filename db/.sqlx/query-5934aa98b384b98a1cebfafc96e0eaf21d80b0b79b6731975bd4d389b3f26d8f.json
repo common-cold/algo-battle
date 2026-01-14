@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n                INSERT INTO QUESTIONS (\n                    question_type, \n                    title, \n                    description, \n                    options,\n                    correct_option,\n                    owner_id\n                )\n                VALUES ($1, $2, $3, $4, $5, $6)\n                RETURNING \n                    id, \n                    question_type AS \"question_type: QuestionType\", \n                    title, \n                    description, \n                    options,\n                    correct_option,\n                    owner_id,\n                    created_at\n            ",
+  "query": "\n                SELECT \n                    id,\n                    question_type AS \"question_type: QuestionType\",\n                    title,\n                    description,\n                    options,\n                    correct_option,\n                    time_limit,\n                    points,\n                    owner_id,\n                    created_at\n                FROM QUESTIONS WHERE\n                   owner_id = $1     \n            ",
   "describe": {
     "columns": [
       {
@@ -46,33 +46,27 @@
       },
       {
         "ordinal": 6,
+        "name": "time_limit",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 7,
+        "name": "points",
+        "type_info": "Int2"
+      },
+      {
+        "ordinal": 8,
         "name": "owner_id",
         "type_info": "Uuid"
       },
       {
-        "ordinal": 7,
+        "ordinal": 9,
         "name": "created_at",
         "type_info": "Int8"
       }
     ],
     "parameters": {
       "Left": [
-        {
-          "Custom": {
-            "name": "question_type",
-            "kind": {
-              "Enum": [
-                "Mcq",
-                "Dsa",
-                "LiveAssignment"
-              ]
-            }
-          }
-        },
-        "Text",
-        "Text",
-        "TextArray",
-        "Int2",
         "Uuid"
       ]
     },
@@ -84,8 +78,10 @@
       false,
       false,
       false,
+      false,
+      false,
       false
     ]
   },
-  "hash": "4773cc8d213872e20235c20df9f4c6c0b8bd89b36ddb28c0a2d80b6b9411fd2f"
+  "hash": "5934aa98b384b98a1cebfafc96e0eaf21d80b0b79b6731975bd4d389b3f26d8f"
 }

@@ -1,0 +1,87 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                SELECT \n                    id,\n                    question_type AS \"question_type: QuestionType\",\n                    title,\n                    description,\n                    options,\n                    correct_option,\n                    time_limit,\n                    points,\n                    owner_id,\n                    created_at\n                FROM QUESTIONS WHERE\n                   owner_id = ANY($1)     \n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "question_type: QuestionType",
+        "type_info": {
+          "Custom": {
+            "name": "question_type",
+            "kind": {
+              "Enum": [
+                "Mcq",
+                "Dsa",
+                "LiveAssignment"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "title",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "description",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "options",
+        "type_info": "TextArray"
+      },
+      {
+        "ordinal": 5,
+        "name": "correct_option",
+        "type_info": "Int2"
+      },
+      {
+        "ordinal": 6,
+        "name": "time_limit",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 7,
+        "name": "points",
+        "type_info": "Int2"
+      },
+      {
+        "ordinal": 8,
+        "name": "owner_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 9,
+        "name": "created_at",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "UuidArray"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "0f4847811d321a503ec88fbd3861222520c14d629a5c424eacb1b77f2aec79dc"
+}
