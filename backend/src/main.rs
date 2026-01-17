@@ -2,7 +2,7 @@ use actix_cors::Cors;
 use actix_web::{App, HttpServer, web};
 use db::Database;
 
-use crate::routes::{create_contest, create_question, create_user, get_all_examiner_contests, get_all_examiner_questions, get_questions_by_id};
+use crate::routes::{create_contest, create_question, create_user, get_all_examiner_contests, get_all_examiner_questions, get_contest_joined_at, get_full_contest_by_id, get_questions_by_id, join_contest};
 
 mod routes;
 
@@ -36,6 +36,9 @@ async fn main() -> std::io::Result<()> {
             .service(get_all_examiner_questions)
             .service(get_all_examiner_contests)
             .service(get_questions_by_id)
+            .service(get_full_contest_by_id)
+            .service(join_contest)
+            .service(get_contest_joined_at)
     })
     .bind(("127.0.0.1", 8080))?
     .run()

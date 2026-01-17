@@ -111,7 +111,7 @@ export default function AllContest() {
                 const contests = response.data as Array<Contest>;
                 if (contests.length == 0) {
                     showErrorToast("You have not saved any contests yet!");
-                } else if (status == "Scheduled") {
+                } else if (status == "Scheduled" || status == "Active") {
                     setUpcomingContests(contests);
                 } else if (status == "Closed") {
                     setPastContests(contests)
@@ -120,6 +120,7 @@ export default function AllContest() {
         }
 
         async function fetchAllExaminerContests() {
+            await fetchExaminerContestByStatus("Active");
             await fetchExaminerContestByStatus("Scheduled");
             await fetchExaminerContestByStatus("Closed");
         }
@@ -133,7 +134,7 @@ export default function AllContest() {
     return <div className="flex-1 py-5 px-10 min-h-0 h-screen">
         <div className="flex flex-col h-full min-h-0 gap-5">
             <div className="flex-1 min-h-0 py-6.25">
-                <ContestInfoList title="Upcoming Contests" contestList={upcomingContests}/>
+                <ContestInfoList title="Active & Upcoming Contests" contestList={upcomingContests}/>
             </div>
             <div className="flex-1 min-h-0 py-6.25">
                 <ContestInfoList title="Past Contests" contestList={pastContests}/>

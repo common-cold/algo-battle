@@ -1,7 +1,7 @@
 use std::env;
 
 use anyhow::Ok;
-use common::{Contest, ContestStatus, CreateContestArgs, CreateQuestionArgs, CreateUserArgs, GetContestArgs, Question, QuestionType, Role, User};
+use common::{Contest, ContestStatus, CreateContestArgs, CreateQuestionArgs, CreateUserArgs, GetContestArgs, Question, QuestionType, QuestionWithoutAnswer, Role, User};
 use sqlx::{Pool, Postgres, postgres::PgPoolOptions, types::Uuid};
 use dotenv::dotenv;
 
@@ -26,6 +26,7 @@ impl Database {
         })
     }
 
+    //user
     pub async fn create_user(&self, args: CreateUserArgs) -> anyhow::Result<User> {
         let user = sqlx::query_as!(
             User,
@@ -51,6 +52,30 @@ impl Database {
         Ok(user)
     }
 
+    pub async fn get_user_by_id(&self, user_id: Uuid) -> anyhow::Result<User> {
+        let user = sqlx::query_as!(
+            User,
+            r#"
+                SELECT
+                    id, 
+                    email, 
+                    name, 
+                    password, 
+                    role AS "role: Role", 
+                    created_at
+                FROM USERS
+                WHERE id = $1    
+            "#,
+            user_id
+        )
+        .fetch_one(&self.pool)
+        .await?;
+
+        Ok(user)
+    }
+
+    
+    //question
     pub async fn create_question(&self, args: CreateQuestionArgs) -> anyhow::Result<Question> {
         let question = sqlx::query_as!(
             Question,
@@ -93,9 +118,9 @@ impl Database {
         Ok(question)
     }
 
-    pub async fn get_questions_by_id(&self, question_ids: Vec<Uuid>) -> anyhow::Result<Vec<Question>> {
+    pub async fn get_questions_by_id(&self, question_ids: Vec<Uuid>) -> anyhow::Result<Vec<QuestionWithoutAnswer>> {
         let questions = sqlx::query_as!(
-            Question,
+            QuestionWithoutAnswer,
             r#"
                 SELECT 
                     id,
@@ -103,7 +128,6 @@ impl Database {
                     title,
                     description,
                     options,
-                    correct_option,
                     time_limit,
                     points,
                     owner_id,
@@ -143,6 +167,7 @@ impl Database {
         Ok(questions)
     }
 
+    //contest
     pub async fn create_contest(&self, args: CreateContestArgs) -> anyhow::Result<Contest> {
         let contest = sqlx::query_as!(
             Contest,
@@ -203,4 +228,103 @@ impl Database {
         
         Ok(contests)
     }
+
+    pub async fn get_contest_by_id(&self, contest_id: Uuid) -> anyhow::Result<Contest> {
+        let contest = sqlx::query_as!(
+            Contest,
+            r#"
+                SELECT 
+                    id,
+                    title,
+                    description,
+                    start_date,
+                    end_date,
+                    status AS "status: ContestStatus",
+                    owner_id,
+                    created_at
+                FROM CONTESTS WHERE
+                   id = $1
+            "#,
+            contest_id,
+        ).fetch_one(&self.pool)
+        .await?;
+        
+        Ok(contest)
+    }
+
+    
+    //contest_question join table
+    pub async fn create_contest_question_join_entry(&self, contest_id: Uuid, question_ids: &Vec<Uuid>) -> anyhow::Result<()> {
+        let mut tx = self.pool.begin().await?;
+        sqlx::query!(
+            r#"
+                INSERT INTO CONTEST_QUESTION (contest_id, question_id)
+                SELECT $1, UNNEST($2::uuid[])
+            "#,
+            contest_id,
+            &question_ids
+        ).execute(&mut *tx)
+        .await?;
+        
+        tx.commit().await?;
+
+        Ok(())
+    }
+
+    pub async fn get_all_question_ids_for_contest_id(&self, contest_id: Uuid) -> anyhow::Result<Vec<Uuid>> {
+        let questions = sqlx::query!(
+            r#"
+                SELECT 
+                    question_id
+                FROM CONTEST_QUESTION   
+                WHERE 
+                    contest_id = $1  
+            "#,
+            contest_id,
+        ).fetch_all(&self.pool)
+        .await?
+        .iter()
+        .map(|r| r.question_id)
+        .collect::<Vec<Uuid>>();
+        
+
+        Ok(questions)
+    }
+    
+
+    //contest_attempts table
+    pub async fn create_contest_attempts_entry(&self, user_id: Uuid, contest_id: Uuid,) -> anyhow::Result<()> {
+        let mut tx = self.pool.begin().await?;
+        sqlx::query!(
+            r#"
+                INSERT INTO CONTEST_ATTEMPTS (user_id, contest_id)
+                VALUES($1, $2)
+            "#,
+            user_id,
+            contest_id
+        ).execute(&mut *tx)
+        .await?;
+        
+        tx.commit().await?;
+        Ok(())
+    }
+
+    pub async fn get_contest_joined_at(&self, user_id: Uuid, contest_id: Uuid) -> anyhow::Result<i64> {
+        let record = sqlx::query!(
+            r#"
+                SELECT 
+                    joined_at
+                FROM CONTEST_ATTEMPTS 
+                WHERE 
+                    user_id = $1
+                    AND contest_id = $2 
+            "#,
+            user_id,
+            contest_id
+        ).fetch_one(&self.pool)
+        .await?;
+
+        Ok(record.joined_at)
+    }
+
 }

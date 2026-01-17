@@ -20,7 +20,7 @@ export interface Question {
     title: string,
     description: string,
     options: Array<string>,
-    correct_option: number,
+    correct_option?: number,
     time_limit: number,
     points: number,
     owner_id: string,

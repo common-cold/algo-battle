@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::{ContestStatus, QuestionType, Role};
+use crate::{Contest, ContestStatus, Question, QuestionType, Role};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CreateUserArgs {
@@ -51,4 +51,31 @@ pub struct GetContestArgs {
     pub limit: Option<usize>,
     pub id: Uuid,
     pub status: ContestStatus
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct QuestionWithoutAnswer {
+    pub id: Uuid,
+    pub question_type: QuestionType,
+    pub title: String,
+    pub description: String,
+    pub options: Vec<String>,
+    pub time_limit: i64,
+    pub points: i16,
+    pub owner_id: Uuid,
+    pub created_at: i64
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct FullContest {
+    pub contest: Contest,
+    pub questions: Vec<QuestionWithoutAnswer>
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GetContestJoinedAt {
+    #[serde(rename ="userId")]
+    pub user_id: Uuid,
+    #[serde(rename="contestId")]
+    pub contest_id: Uuid
 }

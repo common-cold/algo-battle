@@ -62,3 +62,39 @@ export async function getAllExaminerContests(body: GetContestsArgs) {
         return null;
     }
 }
+
+export async function getFullContest(contestId: string) {
+    try {
+        const response = await axios.get(API_BASE_URL + `/contest/full/${contestId}`, {
+            validateStatus: () => true
+        });
+
+    return response;
+    } catch (e) {
+        return null;
+    }
+}
+
+export async function joinContest(userId: string, contestId: string) {
+    try {
+        const response = await axios.get(API_BASE_URL + `/contest/join?userId=${userId}&contestId=${contestId}`, {
+            validateStatus: () => true
+        });
+
+    return response;
+    } catch (e) {
+        return null;
+    }
+}
+
+export async function getContestJoinedAt(userId: string, contestId: string) {
+    try {
+        const response = await axios.get(API_BASE_URL + `/contest/joinedAt?userId=${userId}&contestId=${contestId}`, {
+            validateStatus: () => true
+        });
+
+    return response;
+    } catch (e) {
+        return null;
+    }
+}

@@ -5,6 +5,7 @@ import { createQuestion } from "@/utils/api";
 import { useAtom, useAtomValue } from "jotai";
 import { userIdAtom } from "@/store/atom";
 import { showSuccessToast } from "../ContestInfo";
+import { isStringBlank } from "@/utils/common";
 
 type NewQuestionModalProps = {
     onClose: () => void
@@ -33,10 +34,10 @@ export default function CreateQuestionModal({onClose}: NewQuestionModalProps) {
     }
 
     async function saveQuestion() {
-        // console.log("Array: " + questionData!.options!.every(o => o != null && o != undefined && o.trim().length > 0));
-        if (!questionData || !questionData.correctIndex || !questionData.description || !questionData.options
-            || !questionData.points || !questionData.timeLimit || !questionData.title || !questionData.type
-            || questionData.options.length != 4 || !questionData.options.every(o => o != null && o != undefined && o!= "" && o.trim().length > 0)
+        if (!questionData || !questionData.correctIndex || isStringBlank(questionData.description) || isStringBlank(questionData.points)
+            || isStringBlank(questionData.timeLimit) || isStringBlank(questionData.title) || !questionData.type
+            || !questionData.options || questionData.options.length != 4 
+            || !questionData.options.every(o => o != null && o != undefined && o!= "" && o.trim().length > 0)
         ) {
             console.log(JSON.stringify(questionData));
             showErrorToast("Please fill all fields");
@@ -44,17 +45,17 @@ export default function CreateQuestionModal({onClose}: NewQuestionModalProps) {
         }
 
         let timeLimitInMins = Number(questionData.timeLimit);
-        let timeLimitInMillis = timeLimitInMins * 60 * 1000;
+        let timeLimitInSeconds = timeLimitInMins * 60;
 
         let points = Number(questionData.points);
 
         const response = await createQuestion({
             question_type: questionData.type,
-            title: questionData.title,
-            description: questionData.description,
+            title: questionData.title!,
+            description: questionData.description!,
             options: questionData.options,
             correct_option: questionData.correctIndex,
-            time_limit: timeLimitInMillis,
+            time_limit: timeLimitInSeconds,
             points: points,
             owner_id: userId,
         });

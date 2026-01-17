@@ -1,4 +1,9 @@
+import { candidateIdAtom, contestJoinedAtAtom, userIdAtom } from "@/store/atom";
 import { ContestStatus } from "@/types/db";
+import { joinContest } from "@/utils/api";
+import { convertMillisToHumanReadable } from "@/utils/common";
+import { useAtomValue } from "jotai";
+import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 
 export type ContestInfoProps = {
@@ -9,6 +14,23 @@ export type ContestInfoProps = {
 }
 
 export function ContestInfo({contestId, contestName, startTime, status} : ContestInfoProps) {
+    const candidateId = useAtomValue(candidateIdAtom);
+
+    const router = useRouter();
+
+    async function onJoin() {
+        const response = await joinContest(candidateId, contestId);
+        
+        if (!response) {
+            showErrorToast("Error in joining contest");
+        } else if (response.status != 200) {
+            const data = response.data as any;
+            showErrorToast(data.error);
+        } else {
+            router.push(`/contest/${contestId}`)
+        }
+    }
+
     return <div className="flex justify-between contestRow text-[18px] px-5 py-3 hover:!bg-[#1F2433]">
         <div className="textColor">
             {contestName}
@@ -17,7 +39,7 @@ export function ContestInfo({contestId, contestName, startTime, status} : Contes
             {
                 status == "Scheduled" &&
                 <div className="textColor">
-                    {`Starts at ${startTime}`}
+                    {`Starts at ${convertMillisToHumanReadable(startTime!)}`}
                 </div>    
             }
             <div>
@@ -26,11 +48,21 @@ export function ContestInfo({contestId, contestName, startTime, status} : Contes
                     ?
                     <div className="button1 px-3 font-medium">
                         Edit 
-                    </div>
+                    </div> 
                     :
-                    <div className="button2 px-3 font-medium">
-                        View Leaderboard
-                    </div>
+                    (
+                        status == "Closed"
+                        ?
+                        <div className="button2 px-3 font-medium">
+                            View Leaderboard
+                        </div>
+                        :
+                        <div onClick={() => onJoin()}
+                            className="button2 px-3 font-medium">
+                            Join
+                        </div>
+
+                    )                    
                 }
             </div>
         </div>

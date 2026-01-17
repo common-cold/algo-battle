@@ -5,50 +5,6 @@ import { selectedQuestionsAtom, userIdAtom } from "@/store/atom";
 import { showErrorToast } from "../ContestInfo";
 import { Question } from "@/types/db";
 
-// const question = [
-//     {
-//         title: "2sum"
-//     },
-//     {
-//         title: "2sum"
-//     },
-//     {
-//         title: "2sum"
-//     },
-//     {
-//         title: "2sum"
-//     },
-//     {
-//         title: "2sum"
-//     },
-//     {
-//         title: "2sum"
-//     },
-//     {
-//         title: "2sum"
-//     },
-//     {
-//         title: "2sum"
-//     },
-//     {
-//         title: "2sum"
-//     },
-//     {
-//         title: "2sum"
-//     },
-//     {
-//         title: "2sum"
-//     },
-//     {
-//         title: "2sum"
-//     },
-//     {
-//         title: "2sum"
-//     }
-
-// ]
-
-// const question = []
 
 type QuestionInfoProps = {
     question: Question;

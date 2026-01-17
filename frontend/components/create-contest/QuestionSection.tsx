@@ -5,7 +5,6 @@ import ImportQuestionModal from "./ImportQuestionModal";
 import CreateQuestionModal from "./CreateQuestionModal";
 import { useAtom, useAtomValue } from "jotai";
 import { selectedQuestionsAtom } from "@/store/atom";
-import { getQuestionsById } from "@/utils/api";
 import { showErrorToast } from "../ContestInfo";
 import { Question } from "@/types/db";
 import QuestionInfoList from "../QuestionInfoList";

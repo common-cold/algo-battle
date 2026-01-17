@@ -76,3 +76,42 @@ body {
   background-color: var(--card);
   border-radius: 10px;
 }
+
+.react-datepicker__calendar-icon path {
+  fill: #9CA3AF;
+}
+
+.textBgStyle1 {
+  background-color: #1F2433;
+  color: #7C7CFF;
+}
+
+.textBgStyle2 {
+  background-color: #7C7CFF;
+  color: #0f1117;
+  font-weight: bold;
+}
+
+.textBgStyle3 {
+  background-color: #f79f0784;
+  color: #0f1117;
+  font-weight: bold;
+}
+
+.textBgStyle4 {
+  background-color: #F59E0B;
+  color: #0f1117;
+  font-weight: bold;
+}
+
+.textBgStyle5 {
+  background-color: #22C55E;
+  color: #0f1117;
+  font-weight: bold;
+}
+
+.textBgStyle6 {
+  background-color: #F87171;
+  color: #0f1117;
+  font-weight: bold;
+}

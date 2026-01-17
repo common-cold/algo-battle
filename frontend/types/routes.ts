@@ -1,4 +1,4 @@
-import { ContestStatus, QuestionType, Role } from "./db"
+import { Contest, ContestStatus, Question, QuestionType, Role } from "./db"
 
 export interface CreateUserArgs {
     name: string,
@@ -33,8 +33,8 @@ export interface CreateContestArgs {
     description: string,
     start_date: number,
     end_date: number,
-    owner_id: string,
-    question_ids: Array<String>
+    owner_id?: string,
+    question_ids?: Array<String>
 }
 
 export interface GetContestsArgs {
@@ -42,4 +42,9 @@ export interface GetContestsArgs {
     limit?: number,
     id: string,
     status: ContestStatus
+}
+
+export interface FullContest {
+    contest: Contest,
+    questions: Question[]
 }
