@@ -112,7 +112,7 @@ export default function AllContest() {
                 if (contests.length == 0) {
                     showErrorToast("You have not saved any contests yet!");
                 } else if (status == "Scheduled" || status == "Active") {
-                    setUpcomingContests(contests);
+                    setUpcomingContests(prev => [...prev, ...contests]);
                 } else if (status == "Closed") {
                     setPastContests(contests)
                 }
@@ -127,7 +127,7 @@ export default function AllContest() {
 
         fetchAllExaminerContests();
         return () => {
-
+            
         }
     }, [])
 

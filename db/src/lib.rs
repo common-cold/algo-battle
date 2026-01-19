@@ -248,7 +248,7 @@ impl Database {
             contest_id,
         ).fetch_one(&self.pool)
         .await?;
-        
+
         Ok(contest)
     }
 
@@ -258,8 +258,9 @@ impl Database {
         let mut tx = self.pool.begin().await?;
         sqlx::query!(
             r#"
-                INSERT INTO CONTEST_QUESTION (contest_id, question_id)
-                SELECT $1, UNNEST($2::uuid[])
+                INSERT INTO CONTEST_QUESTION (contest_id, question_id, position)
+                SELECT $1, qid, row_number() OVER() * 10
+                FROM UNNEST($2::uuid[]) AS qid
             "#,
             contest_id,
             &question_ids
@@ -279,6 +280,7 @@ impl Database {
                 FROM CONTEST_QUESTION   
                 WHERE 
                     contest_id = $1  
+                ORDER BY position    
             "#,
             contest_id,
         ).fetch_all(&self.pool)

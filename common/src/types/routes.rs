@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::{Contest, ContestStatus, Question, QuestionType, Role};
+use crate::{Contest, ContestStatus, QuestionType, Role};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CreateUserArgs {
@@ -78,4 +78,10 @@ pub struct GetContestJoinedAt {
     pub user_id: Uuid,
     #[serde(rename="contestId")]
     pub contest_id: Uuid
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SubmitQuestionArgs {
+    pub question_id: Uuid,
+    pub selected_option: i16
 }

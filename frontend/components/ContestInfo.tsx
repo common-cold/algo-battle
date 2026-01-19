@@ -1,7 +1,7 @@
 import { candidateIdAtom, contestJoinedAtAtom, userIdAtom } from "@/store/atom";
 import { ContestStatus } from "@/types/db";
 import { joinContest } from "@/utils/api";
-import { convertMillisToHumanReadable } from "@/utils/common";
+import { convertSecondsToHumanReadable } from "@/utils/common";
 import { useAtomValue } from "jotai";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
@@ -39,7 +39,7 @@ export function ContestInfo({contestId, contestName, startTime, status} : Contes
             {
                 status == "Scheduled" &&
                 <div className="textColor">
-                    {`Starts at ${convertMillisToHumanReadable(startTime!)}`}
+                    {`Starts at ${convertSecondsToHumanReadable(startTime! - (Date.now()/1000))}`}
                 </div>    
             }
             <div>

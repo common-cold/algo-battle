@@ -1,5 +1,5 @@
 import { ContestStatus } from "@/types/db";
-import { convertMillisToHumanReadable } from "@/utils/common";
+import { convertSecondsToHumanReadable } from "@/utils/common";
 import toast from "react-hot-toast";
 
 export type QuestionInfoProps = {
@@ -17,7 +17,7 @@ export function QuestionInfo({id, title, timeLimit, points, showAttemptButton} :
         </div>
         <div className="flex justify-between gap-15">
            <div className="textColor">
-                {`${convertMillisToHumanReadable(timeLimit)} Mins`}
+                {`${convertSecondsToHumanReadable(timeLimit)}`}
             </div>
             <div>
                 {`${points} Points`}

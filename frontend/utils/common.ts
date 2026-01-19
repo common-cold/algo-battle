@@ -1,7 +1,5 @@
-export function convertMillisToHumanReadable(millis: number) {
-    let now = Date.now();
-    let timeLeft = millis - now
-    let mins = timeLeft/(1000 * 60);
+export function convertSecondsToHumanReadable(seconds: number) {
+    let mins = seconds/60;
     if (mins >= 60) {
         let hours = mins/60;
         if (hours >= 24) {

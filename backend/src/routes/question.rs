@@ -1,5 +1,5 @@
 use actix_web::{HttpResponse, post, web::{self, Data}};
-use common::{CreateQuestionArgs, GetQuestionArgs, GetQuestionsByIdArgs};
+use common::{CreateQuestionArgs, GetQuestionArgs, GetQuestionsByIdArgs, SubmitQuestionArgs};
 use page_hunter::paginate_records;
 use serde_json::json;
 
@@ -73,3 +73,8 @@ pub async fn get_all_examiner_questions(app_data: Data<AppData>, body: web::Json
         }
     }
 }
+
+// #[post("/question/submit/mcq")]
+// pub async fn submit_mcq_question(app_data: Data<AppData>, body: web::Json<SubmitQuestionArgs>) -> HttpResponse {
+
+// }
