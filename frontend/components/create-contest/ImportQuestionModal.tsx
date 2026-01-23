@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react"
 import { getAllExaminerQuestions } from "@/utils/api";
 import { useAtom, useAtomValue } from "jotai";
-import { selectedQuestionsAtom, userIdAtom } from "@/store/atom";
+import { selectedQuestionsAtom } from "@/store/atom";
 import { showErrorToast } from "../ContestInfo";
 import { Question } from "@/types/db";
 
@@ -16,7 +16,6 @@ type ImportQuestionModalProps = {
 }
 
 export default function ImportQuestionModal({onClose} : ImportQuestionModalProps) {
-    const userId = useAtomValue(userIdAtom);
     const [selectedQuestions, setSelectedQuestions] = useAtom(selectedQuestionsAtom);
     const [questions, setQuestions] = useState<Array<Question>>([]);
     const modalRef = useRef<HTMLDivElement>(null);
@@ -52,7 +51,8 @@ export default function ImportQuestionModal({onClose} : ImportQuestionModalProps
     useEffect(() => {
         async function fetchExaminerQuestions() {
             const response = await getAllExaminerQuestions({
-                id: userId
+                page: undefined,
+                limit: undefined
             });
             if (!response) {
                 showErrorToast("Error in fetching saved questions");

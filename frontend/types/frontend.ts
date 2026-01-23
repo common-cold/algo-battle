@@ -1,16 +1,4 @@
-export type ContestInfoData = {
-    contestId: string,
-    contestName: string,
-    startTime?: string,
-    isUpcomingContest: boolean
-}
-
-export type ContestDetailType = {
-    title: string,
-    description: string,
-    startDate: string,
-    endDate: string
-}
+import { Role } from "./db"
 
 export type QuestionType = "Mcq" | "Dsa" | "LiveAssignment"
 
@@ -22,4 +10,11 @@ export interface QuestionData {
     description?: string,
     options?: string[]
     correctIndex?: number
+}
+
+export type JwtPayload = {
+    id: string,
+    role: Role,
+    username: string,
+    exp: number
 }

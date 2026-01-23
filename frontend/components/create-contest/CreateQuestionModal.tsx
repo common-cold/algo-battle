@@ -2,8 +2,7 @@ import { QuestionData, QuestionType } from "@/types/frontend";
 import { useEffect, useRef, useState } from "react";
 import { showErrorToast } from "../QuestionInfo";
 import { createQuestion } from "@/utils/api";
-import { useAtom, useAtomValue } from "jotai";
-import { userIdAtom } from "@/store/atom";
+import { useAtomValue } from "jotai";
 import { showSuccessToast } from "../ContestInfo";
 import { isStringBlank } from "@/utils/common";
 
@@ -12,7 +11,6 @@ type NewQuestionModalProps = {
 }
 
 export default function CreateQuestionModal({onClose}: NewQuestionModalProps) {
-    const userId = useAtomValue(userIdAtom);
     const modalRef = useRef<HTMLDivElement>(null);
     const [questionData, setQuestionData] = useState<QuestionData>({
         type: "Mcq",
@@ -56,8 +54,7 @@ export default function CreateQuestionModal({onClose}: NewQuestionModalProps) {
             options: questionData.options,
             correct_option: questionData.correctIndex,
             time_limit: timeLimitInSeconds,
-            points: points,
-            owner_id: userId,
+            points: points
         });
 
         if (!response) {

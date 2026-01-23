@@ -3,11 +3,12 @@
 import QuestionScreen from "@/components/contest-page/QuestionScreen";
 import QuestionSidebar from "@/components/contest-page/QuestionSidebar";
 import { showErrorToast } from "@/components/ContestInfo";
-import { candidateIdAtom, contestEndDateAtom, contestJoinedAtAtom, contestSecondsAtom } from "@/store/atom";
+import { contestEndDateAtom, contestJoinedAtAtom, contestSecondsAtom, userAtom } from "@/store/atom";
 import { Question } from "@/types/db";
 import { FullContest } from "@/types/routes";
 import { getContestJoinedAt, getFullContest } from "@/utils/api";
 import { useAtom, useAtomValue } from "jotai";
+import { useRouter } from "next/navigation";
 import { use, useEffect, useState } from "react"
 
 
@@ -20,12 +21,14 @@ export default function ContestPage({params} : {
     const [contestJoinedAt, setContestJoinedAt] = useAtom(contestJoinedAtAtom);
     const [contestEndDate, setContestEndDate] = useAtom(contestEndDateAtom);
     const [contestSeconds, setContestSeconds] = useAtom(contestSecondsAtom);
-    const candidateId = useAtomValue(candidateIdAtom);
+    const user = useAtomValue(userAtom);
     const [fullContest, setFullContest] = useState<FullContest | null>(null);
     const [currQuestion, setCurrQuestion] = useState<Question | null>(null);
     const [error, setError] = useState<string | null>(null);
 
     const {id} = use(params);
+
+    const router = useRouter();
 
     function onQuestionClick(question: Question) {
         setCurrQuestion(question);
@@ -33,7 +36,7 @@ export default function ContestPage({params} : {
 
     useEffect(() => {
         async function fetchContestJoinedAt() {
-            const response = await getContestJoinedAt(candidateId, id);
+            const response = await getContestJoinedAt(user!.id, id);
 
             if (!response) {
                 showErrorToast("Error in fetching contest joining time");
@@ -76,12 +79,21 @@ export default function ContestPage({params} : {
             await fetchFullContest();
         }
         
+        let token = localStorage.getItem("token");
+        if (!token) {
+            router.replace("/");
+        } 
+
+        if (!user) {
+            return;
+        }
+
         run()
 
         return () => {
             setContestJoinedAt(null);
         }
-    }, []);
+    }, [user]);
 
     useEffect(() => {
         const interval = setInterval(() => setContestSeconds(prev => prev! + 1), 1000);

@@ -52,6 +52,28 @@ impl Database {
         Ok(user)
     }
 
+    pub async fn get_user_by_email(&self, email: String) -> anyhow::Result<User> {
+        let user = sqlx::query_as!(
+            User,
+            r#"
+                SELECT
+                    id, 
+                    email, 
+                    name, 
+                    password, 
+                    role AS "role: Role", 
+                    created_at
+                FROM USERS
+                WHERE email = $1    
+            "#,
+            email
+        )
+        .fetch_one(&self.pool)
+        .await?;
+
+        Ok(user)
+    }
+
     pub async fn get_user_by_id(&self, user_id: Uuid) -> anyhow::Result<User> {
         let user = sqlx::query_as!(
             User,
@@ -76,7 +98,7 @@ impl Database {
 
     
     //question
-    pub async fn create_question(&self, args: CreateQuestionArgs) -> anyhow::Result<Question> {
+    pub async fn create_question(&self, args: CreateQuestionArgs, owner_id: Uuid) -> anyhow::Result<Question> {
         let question = sqlx::query_as!(
             Question,
             r#"
@@ -110,7 +132,7 @@ impl Database {
             args.correct_option,
             args.time_limit,
             args.points,
-            args.owner_id
+            owner_id
         )
         .fetch_one(&self.pool)
         .await?;
@@ -168,7 +190,7 @@ impl Database {
     }
 
     //contest
-    pub async fn create_contest(&self, args: CreateContestArgs) -> anyhow::Result<Contest> {
+    pub async fn create_contest(&self, args: CreateContestArgs, owner_id: Uuid) -> anyhow::Result<Contest> {
         let contest = sqlx::query_as!(
             Contest,
             r#"
@@ -196,7 +218,7 @@ impl Database {
             args.start_date,
             args.end_date,
             ContestStatus::Scheduled as ContestStatus,
-            args.owner_id
+            owner_id
         )
         .fetch_one(&self.pool)
         .await?;
@@ -204,7 +226,7 @@ impl Database {
         Ok(contest)
     }
 
-    pub async fn get_all_examiner_contests(&self, args: GetContestArgs) -> anyhow::Result<Vec<Contest>> {
+    pub async fn get_all_examiner_contests(&self, args: GetContestArgs, owner_id: Uuid) -> anyhow::Result<Vec<Contest>> {
         let contests = sqlx::query_as!(
             Contest,
             r#"
@@ -221,8 +243,31 @@ impl Database {
                    owner_id = $1
                 AND status = $2       
             "#,
-            args.id,
+            owner_id,
             args.status as ContestStatus
+        ).fetch_all(&self.pool)
+        .await?;
+        
+        Ok(contests)
+    }
+
+    pub async fn get_all_contests(&self, status: ContestStatus) -> anyhow::Result<Vec<Contest>> {
+        let contests = sqlx::query_as!(
+            Contest,
+            r#"
+                SELECT 
+                    id,
+                    title,
+                    description,
+                    start_date,
+                    end_date,
+                    status AS "status: ContestStatus",
+                    owner_id,
+                    created_at
+                FROM CONTESTS WHERE
+                status = $1       
+            "#,
+            status as ContestStatus
         ).fetch_all(&self.pool)
         .await?;
         
@@ -327,6 +372,22 @@ impl Database {
         .await?;
 
         Ok(record.joined_at)
+    }
+
+    pub async fn get_contest_user_ids(&self, contest_id: Uuid) -> anyhow::Result<Vec<Uuid>> {
+        let user_ids = sqlx::query!(
+            r#"
+                SELECT user_id
+                FROM CONTEST_ATTEMPTS
+                WHERE contest_id = $1
+            "#,
+            contest_id
+        ).fetch_all(&self.pool) 
+        .await?
+        .iter().map(|r| r.user_id)
+        .collect::<Vec<Uuid>>();
+        
+        Ok(user_ids)
     }
 
 }

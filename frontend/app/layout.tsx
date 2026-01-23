@@ -54,7 +54,6 @@ export default function RootLayout({
           position="top-right"
           reverseOrder={false}
         />
-        <Appbar/>
         {children}
       </body>
     </html>

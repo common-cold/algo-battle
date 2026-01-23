@@ -1,5 +1,5 @@
 use actix_web::{HttpResponse, get, post, web::{self, Data}};
-use common::{ContestStatus, CreateContestArgs, FullContest, GetContestArgs, GetContestJoinedAt, Role, User};
+use common::{ContestStatus, CreateContestArgs, FullContest, GetContestArgs, GetContestJoinedAt, JwtClaims, Role};
 use page_hunter::paginate_records;
 use serde_json::json;
 use sqlx::types::Uuid;
@@ -7,11 +7,11 @@ use sqlx::types::Uuid;
 use crate::{AppData};
 
 #[post("/contest/create")]
-pub async fn create_contest(app_data: Data<AppData>, body: web::Json<CreateContestArgs>) -> HttpResponse {
+pub async fn create_contest(app_data: Data<AppData>, body: web::Json<CreateContestArgs>, jwt_claims: JwtClaims) -> HttpResponse {
     let app_data= app_data.get_ref();
     let db = &app_data.db;
 
-    let create_result = db.create_contest(body.clone()).await;
+    let create_result = db.create_contest(body.clone(), jwt_claims.id).await;
     if let Err(e) = create_result {
         return HttpResponse::InternalServerError().json(json!({
             "error": e.to_string()
@@ -33,11 +33,46 @@ pub async fn create_contest(app_data: Data<AppData>, body: web::Json<CreateConte
 }
 
 #[post("/contest/all/examiner")]
-pub async fn get_all_examiner_contests(app_data: Data<AppData>, body: web::Json<GetContestArgs>) -> HttpResponse {
+pub async fn get_all_examiner_contests(app_data: Data<AppData>, body: web::Json<GetContestArgs>, jwt_claims: JwtClaims) -> HttpResponse {
     let app_data= app_data.get_ref();
     let db = &app_data.db;
 
-    match db.get_all_examiner_contests(body.0.clone()).await {
+    match db.get_all_examiner_contests(body.0.clone(), jwt_claims.id).await {
+        Ok(contests) => {
+            if body.limit.is_none() || body.page.is_none() {
+                return HttpResponse::Ok().json(contests);
+            }
+
+            let mut page = 0;
+            let mut limit = 5;
+            if body.0.page.is_some() {
+                page = body.page.unwrap();
+            }
+            if body.0.limit.is_some() {
+                limit = body.limit.unwrap();
+            }
+            match paginate_records(&contests, page, limit) {
+                Ok(p) => HttpResponse::Ok().json(p),
+
+                Err(e) => HttpResponse::InternalServerError().json(json!({
+                    "error": e.to_string()
+                }))
+            }
+        }
+        Err(e) => {
+            HttpResponse::InternalServerError().json(json!({
+                "error": e.to_string()
+            }))
+        }
+    }
+}
+
+#[post("/contest/all")]
+pub async fn get_all_contests(app_data: Data<AppData>, body: web::Json<GetContestArgs>, _jwt_claims: JwtClaims) -> HttpResponse {
+    let app_data= app_data.get_ref();
+    let db = &app_data.db;
+
+    match db.get_all_contests(body.0.status).await {
         Ok(contests) => {
             if body.limit.is_none() || body.page.is_none() {
                 return HttpResponse::Ok().json(contests);
@@ -102,11 +137,13 @@ pub async fn get_full_contest_by_id(app_data: Data<AppData>, path: web::Path<Uui
     });
 }
 
-#[get("/contest/join")]
-pub async fn join_contest(app_data: Data<AppData>, query: web::Query<GetContestJoinedAt>) -> HttpResponse {
+#[get("/contest/join/{contest_id}")]
+pub async fn join_contest(app_data: Data<AppData>, path: web::Path<Uuid>, jwt_claims: JwtClaims) -> HttpResponse {
     let db = &app_data.db;
 
-    match db.get_user_by_id(query.user_id).await {
+    let contest_id = path.into_inner();
+
+    match db.get_user_by_id(jwt_claims.id).await {
         Ok(user) => {
             if !matches!(user.role, Role::Candidate) {
                 return HttpResponse::InternalServerError().json(json!({
@@ -121,7 +158,7 @@ pub async fn join_contest(app_data: Data<AppData>, query: web::Query<GetContestJ
         }
     }
 
-    match db.get_contest_by_id(query.contest_id).await {
+    match db.get_contest_by_id(contest_id).await {
         Ok(contest) => {
             match contest.status {
                 ContestStatus::Closed => {
@@ -144,7 +181,7 @@ pub async fn join_contest(app_data: Data<AppData>, query: web::Query<GetContestJ
         }
     }
 
-    match db.create_contest_attempts_entry(query.user_id, query.contest_id).await {
+    match db.create_contest_attempts_entry(jwt_claims.id, contest_id).await {
         Ok(()) => {
             HttpResponse::Ok().json(json!({
                 "message": "Contest joined successfully"

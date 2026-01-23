@@ -1,6 +1,6 @@
 "use client"
 
-import { contestDetailsAtom, selectedQuestionsAtom, userIdAtom } from "@/store/atom"
+import { contestDetailsAtom, selectedQuestionsAtom } from "@/store/atom"
 import { useAtom, useAtomValue } from "jotai"
 import { showErrorToast, showSuccessToast } from "../ContestInfo";
 import { CreateContestArgs } from "@/types/routes";
@@ -11,7 +11,6 @@ import { useRouter } from "next/navigation";
 export function SaveContestButton() {
     const [selectedQuestions, setSelectedQuestions] = useAtom(selectedQuestionsAtom);
     const [contestDetail, setContestDetail] = useAtom(contestDetailsAtom);
-    const userId = useAtomValue(userIdAtom);
     const router = useRouter();
 
     async function onClick() {        
@@ -34,7 +33,6 @@ export function SaveContestButton() {
             description: contestDetail?.description,
             start_date: contestDetail.start_date,
             end_date: contestDetail.end_date,
-            owner_id: userId,
             question_ids: questionIds
         }
 

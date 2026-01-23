@@ -10,3 +10,7 @@ uuid = { version = "1", features = ["serde", "v4"] }
 sqlx = {version = "0.8.6", features = ["postgres", "runtime-tokio", "uuid", "tls-native-tls", "json"]}
 tokio = "1.48.0"
 thiserror = "2.0.17"
+jsonwebtoken = {version = "10.2.0", features = ["rust_crypto"]}
+chrono = "0.4.43"
+actix-web = "4.12.1"
+dotenv = "0.15.0"

@@ -1,4 +1,4 @@
-import { candidateIdAtom, contestJoinedAtAtom, userIdAtom } from "@/store/atom";
+import { userAtom } from "@/store/atom";
 import { ContestStatus } from "@/types/db";
 import { joinContest } from "@/utils/api";
 import { convertSecondsToHumanReadable } from "@/utils/common";
@@ -14,12 +14,12 @@ export type ContestInfoProps = {
 }
 
 export function ContestInfo({contestId, contestName, startTime, status} : ContestInfoProps) {
-    const candidateId = useAtomValue(candidateIdAtom);
+    const user = useAtomValue(userAtom);
 
     const router = useRouter();
 
     async function onJoin() {
-        const response = await joinContest(candidateId, contestId);
+        const response = await joinContest(contestId);
         
         if (!response) {
             showErrorToast("Error in joining contest");
@@ -46,6 +46,8 @@ export function ContestInfo({contestId, contestName, startTime, status} : Contes
                 {
                     status == "Scheduled"
                     ?
+                    user!.role == "Examiner"
+                    &&
                     <div className="button1 px-3 font-medium">
                         Edit 
                     </div> 
@@ -57,11 +59,18 @@ export function ContestInfo({contestId, contestName, startTime, status} : Contes
                             View Leaderboard
                         </div>
                         :
-                        <div onClick={() => onJoin()}
-                            className="button2 px-3 font-medium">
-                            Join
-                        </div>
-
+                        (
+                            user!.role == "Examiner"
+                            ?
+                            <div className="button2 px-3 font-medium">
+                                In Progress
+                            </div>
+                            :
+                            <div onClick={() => onJoin()}
+                                className="button2 px-3 font-medium">
+                                Join
+                            </div>
+                        )
                     )                    
                 }
             </div>

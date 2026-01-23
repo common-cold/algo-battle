@@ -77,6 +77,11 @@ body {
   border-radius: 10px;
 }
 
+.inputBox2 {
+  background-color: var(--background);
+  border-radius: 10px;
+}
+
 .react-datepicker__calendar-icon path {
   fill: #9CA3AF;
 }

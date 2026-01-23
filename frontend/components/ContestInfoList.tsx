@@ -1,4 +1,3 @@
-import { ContestInfoData } from "@/types/frontend"
 import { Contest } from "@/types/db"
 import { ContestInfo } from "./ContestInfo"
 

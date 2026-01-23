@@ -15,3 +15,5 @@ sqlx = {version = "0.8.6", features = ["postgres", "runtime-tokio", "uuid", "tls
 tokio = "1.48.0"
 anyhow = "1.0.100"
 page-hunter = { version = "0.6.0", features = ["serde"] }
+jsonwebtoken = "10.2.0"
+bcrypt = "0.18.0"

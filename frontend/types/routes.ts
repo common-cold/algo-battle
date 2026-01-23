@@ -1,10 +1,18 @@
 import { Contest, ContestStatus, Question, QuestionType, Role } from "./db"
 
-export interface CreateUserArgs {
+export const API_BASE_URL = 'http://localhost:8080';
+export const WS_BASE_URL = 'http://localhost:8081';
+
+export interface SignupArgs {
     name: string,
     email: string,
     password: string,
     role: Role
+}
+
+export interface SignInArgs {
+    email: string,
+    password: string,
 }
 
 export interface CreateQuestionArgs {
@@ -14,14 +22,12 @@ export interface CreateQuestionArgs {
     options: Array<string>,
     correct_option: number,
     time_limit: number,
-    points: number,
-    owner_id: string
+    points: number
 }
 
 export interface GetQuestionArgs {
     page?: number,
-    limit?: number,
-    id: string
+    limit?: number
 }
 
 export interface GetQuestionsByIdArgs {
@@ -32,15 +38,13 @@ export interface CreateContestArgs {
     title: string,
     description: string,
     start_date: number,
-    end_date: number,
-    owner_id?: string,
+    end_date: number
     question_ids?: Array<String>
 }
 
 export interface GetContestsArgs {
     page?: number,
     limit?: number,
-    id: string,
     status: ContestStatus
 }
 

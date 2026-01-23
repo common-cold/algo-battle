@@ -2,106 +2,35 @@
 
 import { showErrorToast } from "@/components/ContestInfo";
 import ContestInfoList from "@/components/ContestInfoList";
-import { userIdAtom } from "@/store/atom";
-import { Contest, ContestStatus } from "@/types/db";
-import { getAllExaminerContests } from "@/utils/api";
+import { userAtom } from "@/store/atom";
+import { Contest, ContestStatus, Role } from "@/types/db";
+import { getAllContests, getAllExaminerContests } from "@/utils/api";
 import { useAtomValue } from "jotai";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 
-let upcomingContests = [
-    {
-        contestId: "1",
-        contestName: "DSA Challenge #1",
-        startTime: "5:30 PM",
-        isUpcomingContest: true
-    },
-    {
-        contestId: "1",
-        contestName: "DSA Challenge #1",
-        startTime: "5:30 PM",
-        isUpcomingContest: true
-    },
-    {
-        contestId: "1",
-        contestName: "DSA Challenge #1",
-        startTime: "5:30 PM",
-        isUpcomingContest: true
-    },
-    {
-        contestId: "1",
-        contestName: "DSA Challenge #1",
-        startTime: "5:30 PM",
-        isUpcomingContest: true
-    },
-    // {
-    //     contestId: "1",
-    //     contestName: "DSA Challenge #1",
-    //     startTime: "5:30 PM",
-    //     isUpcomingContest: true
-    // },
-    // {
-    //     contestId: "1",
-    //     contestName: "DSA Challenge #1",
-    //     startTime: "5:30 PM",
-    //     isUpcomingContest: true
-    // },
-    // {
-    //     contestId: "1",
-    //     contestName: "DSA Challenge #1",
-    //     startTime: "5:30 PM",
-    //     isUpcomingContest: true
-    // },,{
-    //     contestId: "1",
-    //     contestName: "DSA Challenge #1",
-    //     startTime: "5:30 PM",
-    //     isUpcomingContest: true
-    // },
-    // {
-    //     contestId: "1",
-    //     contestName: "DSA Challenge #1",
-    //     startTime: "5:30 PM",
-    //     isUpcomingContest: true
-    // },
-
-];
-
-let pastContests = [
-    {
-        contestId: "1",
-        contestName: "DSA Challenge #1",
-        isUpcomingContest: false
-    },
-    {
-        contestId: "1",
-        contestName: "DSA Challenge #1",
-        isUpcomingContest: false
-    },
-    {
-        contestId: "1",
-        contestName: "DSA Challenge #1",
-        isUpcomingContest: false
-    },
-    {
-        contestId: "1",
-        contestName: "DSA Challenge #1",
-        isUpcomingContest: false
-    }
-];
-
 export default function AllContest() {
-    const userId = useAtomValue(userIdAtom);
     const [upcomingContests, setUpcomingContests] = useState<Contest[]>([]);
     const [pastContests, setPastContests] = useState<Contest[]>([]);
+    const user = useAtomValue(userAtom);
+
+    const router = useRouter();
 
 
     useEffect(() => {
-        async function fetchExaminerContestByStatus(status: ContestStatus) {
-            const response = await getAllExaminerContests({
-                id: userId,
-                status: status
-            });
-
+        async function fetchContestByStatus(status: ContestStatus, role: Role) {
+            let response;
+            if (role === "Examiner") {
+                response = await getAllExaminerContests({
+                    status: status
+                });
+            } else {
+                response = await getAllContests({
+                    status: status
+                });
+            }
+            
             if (!response) {
                 showErrorToast("Error in fetching contests");
             } else if (response.status != 200) {
@@ -120,16 +49,24 @@ export default function AllContest() {
         }
 
         async function fetchAllExaminerContests() {
-            await fetchExaminerContestByStatus("Active");
-            await fetchExaminerContestByStatus("Scheduled");
-            await fetchExaminerContestByStatus("Closed");
+            await fetchContestByStatus("Active", user!.role);
+            await fetchContestByStatus("Scheduled", user!.role);
+            await fetchContestByStatus("Closed", user!.role);
+        }
+        
+        let token = localStorage.getItem("token");
+        if (!token) {
+            router.replace("/");
+        }
+        if (!user) {
+            return;
         }
 
         fetchAllExaminerContests();
         return () => {
             
         }
-    }, [])
+    }, [user])
 
     return <div className="flex-1 py-5 px-10 min-h-0 h-screen">
         <div className="flex flex-col h-full min-h-0 gap-5">

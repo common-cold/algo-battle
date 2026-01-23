@@ -1,7 +1,6 @@
 "use client"
 
 import { contestDetailsAtom } from "@/store/atom";
-import { ContestDetailType } from "@/types/frontend";
 import { CreateContestArgs } from "@/types/routes";
 import { useAtom } from "jotai";
 import { Dispatch, SetStateAction, useEffect, useState } from "react"
