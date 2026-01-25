@@ -27,7 +27,9 @@ pub struct WebSocketResponse {
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(tag = "type", content = "payload")]
 pub enum ResponseData {
-    Log(LogArgs)
+    Log(LogArgs),
+    NextQuestion(NextQuestionArgs),
+    EndContest(EndContestArgs)
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -36,4 +38,15 @@ pub struct LogArgs {
 
     #[serde(rename="isError")]
     pub is_error: bool
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct NextQuestionArgs {
+    pub question_id: Uuid,
+    pub contest_id: Uuid
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct EndContestArgs {
+    pub contest_id: Uuid
 }

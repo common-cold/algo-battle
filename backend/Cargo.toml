@@ -17,3 +17,7 @@ anyhow = "1.0.100"
 page-hunter = { version = "0.6.0", features = ["serde"] }
 jsonwebtoken = "10.2.0"
 bcrypt = "0.18.0"
+tokio-tungstenite = "0.21"
+url = "2"
+futures-util = "0.3"
+chrono = "0.4.43"

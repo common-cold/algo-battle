@@ -1,8 +1,8 @@
 use std::env;
 
 use anyhow::Ok;
-use common::{Contest, ContestStatus, CreateContestArgs, CreateQuestionArgs, CreateUserArgs, GetContestArgs, Question, QuestionType, QuestionWithoutAnswer, Role, User};
-use sqlx::{Pool, Postgres, postgres::PgPoolOptions, types::Uuid};
+use common::{Contest, ContestStatus, CreateContestArgs, CreateQuestionArgs, CreateUserArgs, GetContestArgs, Question, QuestionType, QuestionWithoutAnswer, Role, UpdateContestArgs, User};
+use sqlx::{Pool, Postgres, QueryBuilder, postgres::PgPoolOptions, types::Uuid};
 use dotenv::dotenv;
 
 
@@ -295,6 +295,38 @@ impl Database {
         .await?;
 
         Ok(contest)
+    }
+
+    pub async fn bulk_update_contests(&self, contest_ids: Vec<Uuid>, update_args: UpdateContestArgs) -> anyhow::Result<()> {
+        let mut qb = QueryBuilder::new("UPDATE CONTESTS SET ");
+        let mut sep = qb.separated(", ");
+
+        if update_args.title.is_some() {
+            sep.push("title = ").push_bind(update_args.title.unwrap());
+        }
+        if update_args.description.is_some() {
+            sep.push("description = ").push_bind(update_args.description.unwrap());
+        }
+        if update_args.start_date.is_some() {
+            sep.push("start_date = ").push_bind(update_args.start_date.unwrap());
+        }
+        if update_args.end_date.is_some() {
+            sep.push("end_date = ").push_bind(update_args.end_date.unwrap());
+        }
+        if update_args.status.is_some() {
+            qb.push("status = ").push_bind(update_args.status.unwrap());
+            qb.push(" ");
+        }
+        
+        qb.push("WHERE id = ANY(")
+        .push_bind(contest_ids)
+        .push(")");
+
+        qb.build().execute(
+            &self.pool
+        ).await?;
+
+        Ok(())
     }
 
     

@@ -2,9 +2,10 @@ use actix_cors::Cors;
 use actix_web::{App, HttpServer, web};
 use db::Database;
 
-use crate::routes::{create_contest, create_question, create_user, get_all_contests, get_all_examiner_contests, get_all_examiner_questions, get_contest_joined_at, get_full_contest_by_id, get_questions_by_id, join_contest, signin};
+use crate::{routes::{create_contest, create_question, create_user, get_all_contests, get_all_examiner_contests, get_all_examiner_questions, get_contest_joined_at, get_full_contest_by_id, get_questions_by_id, join_contest, signin}, service::{cron_task}};
 
 mod routes;
+mod service;
 
 #[derive(Clone)]
 pub struct AppData {
@@ -15,10 +16,15 @@ pub struct AppData {
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     let database = Database::init_db().await.unwrap();
+    let database_clone = database.clone();
 
     let app_data = AppData {
         db: database
     };
+
+    tokio::spawn(async move {
+        cron_task(&database_clone).await;
+    });
 
     HttpServer::new(move || {
         let cors = Cors::default()

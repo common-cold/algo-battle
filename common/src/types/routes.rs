@@ -87,3 +87,12 @@ pub struct SubmitQuestionArgs {
     pub question_id: Uuid,
     pub selected_option: i16
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UpdateContestArgs {
+    pub title: Option<String>,
+    pub description: Option<String>,
+    pub start_date: Option<i64>,
+    pub end_date: Option<i64>,
+    pub status: Option<ContestStatus>
+}

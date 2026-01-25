@@ -1,11 +1,11 @@
 use std::{env, future::{Ready, ready}};
 
-use actix_web::{FromRequest, error::{ErrorInternalServerError, ErrorUnauthorized}};
+use actix_web::{FromRequest, error::{ErrorInternalServerError, ErrorUnauthorized}, web::Query};
 use chrono::Utc;
 use jsonwebtoken::{DecodingKey, Validation, decode};
 use serde::{Deserialize, Serialize};
 
-use crate::{JwtClaims};
+use crate::{JwtClaims, WebsocketAuth};
 
 #[derive(Serialize, Deserialize)]
 pub struct WsQuery {
@@ -13,21 +13,33 @@ pub struct WsQuery {
 }
 
 
-impl FromRequest for JwtClaims {
+impl FromRequest for WebsocketAuth {
     type Error = actix_web::Error;
     type Future = Ready<Result<Self, Self::Error>>;
 
     fn from_request(req: &actix_web::HttpRequest, _: &mut actix_web::dev::Payload) -> Self::Future {
-        let header_auth_option = req.headers().get("Authorization");
+        let params_result = Query::<WsQuery>::from_query(req.query_string());
+        let header_api_key_option = req.headers().get("x-api-key");
 
         let mut token_option: Option<String> = None;
 
-        if header_auth_option.is_some() {
-            let header_val = header_auth_option.unwrap().to_str();
+        if params_result.is_ok() {
+            let param = params_result.unwrap();
+            token_option = Some(param.token.clone());
+        } else if header_api_key_option.is_some() {
+            let header_val = header_api_key_option.unwrap().to_str();
             if header_val.is_ok() {
-                token_option = Some(header_val.unwrap().to_string())
+                let x_api_key_result = env::var("X_API_KEY");
+                if x_api_key_result.is_err() {
+                    return ready(Err(ErrorInternalServerError("x-api-key is missing")));
+                }
+
+                if header_val.unwrap() == x_api_key_result.unwrap() {
+                    return ready(Ok(WebsocketAuth::Service));
+                }
             }
-        } 
+        }
+
         if token_option.is_none() {
             return ready(Err(ErrorUnauthorized("JWT Token is missing")));
         }
@@ -55,6 +67,6 @@ impl FromRequest for JwtClaims {
             return ready(Err(ErrorUnauthorized("JWT token has expired")));
         }
 
-        return ready(Ok(jwt_claim.claims));
+        return ready(Ok(WebsocketAuth::User(jwt_claim.claims)));
     }
 }

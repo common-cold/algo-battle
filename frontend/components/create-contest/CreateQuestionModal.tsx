@@ -32,7 +32,7 @@ export default function CreateQuestionModal({onClose}: NewQuestionModalProps) {
     }
 
     async function saveQuestion() {
-        if (!questionData || !questionData.correctIndex || isStringBlank(questionData.description) || isStringBlank(questionData.points)
+        if (!questionData || questionData.correctIndex == null || questionData.correctIndex == undefined || isStringBlank(questionData.description) || isStringBlank(questionData.points)
             || isStringBlank(questionData.timeLimit) || isStringBlank(questionData.title) || !questionData.type
             || !questionData.options || questionData.options.length != 4 
             || !questionData.options.every(o => o != null && o != undefined && o!= "" && o.trim().length > 0)
@@ -145,6 +145,8 @@ export default function CreateQuestionModal({onClose}: NewQuestionModalProps) {
                                 timeLimit: e.target.value as QuestionType
                             } as QuestionData))}
                                 name="selectedType" defaultValue="10">
+                                <option value="1">1 min</option>
+                                <option value="5">5 mins</option>
                                 <option value="10">10 mins</option>
                                 <option value="20">20 mins</option>
                                 <option value="30">30 mins</option>

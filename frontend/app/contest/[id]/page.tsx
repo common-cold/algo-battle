@@ -1,11 +1,13 @@
 "use client"
 
+import { ContestEndModal } from "@/components/contest-page/ContestEndModal";
 import QuestionScreen from "@/components/contest-page/QuestionScreen";
 import QuestionSidebar from "@/components/contest-page/QuestionSidebar";
 import { showErrorToast } from "@/components/ContestInfo";
-import { contestEndDateAtom, contestJoinedAtAtom, contestSecondsAtom, userAtom } from "@/store/atom";
+import { connectWsAtom, contestEndDateAtom, contestJoinedAtAtom, contestSecondsAtom, currentQuestionIdAtom, isContestOverAtom, isWsOpenAtom, userAtom, wsAtom } from "@/store/atom";
 import { Question } from "@/types/db";
 import { FullContest } from "@/types/routes";
+import { WebSocketMessage } from "@/types/ws";
 import { getContestJoinedAt, getFullContest } from "@/utils/api";
 import { useAtom, useAtomValue } from "jotai";
 import { useRouter } from "next/navigation";
@@ -21,7 +23,13 @@ export default function ContestPage({params} : {
     const [contestJoinedAt, setContestJoinedAt] = useAtom(contestJoinedAtAtom);
     const [contestEndDate, setContestEndDate] = useAtom(contestEndDateAtom);
     const [contestSeconds, setContestSeconds] = useAtom(contestSecondsAtom);
+    const [ws, setWs] = useAtom(wsAtom);
+    const isWsOpen = useAtomValue(isWsOpenAtom);
+    const [_, connectWs] = useAtom(connectWsAtom);
     const user = useAtomValue(userAtom);
+    const currentQuestionId = useAtomValue(currentQuestionIdAtom);
+    const isContestOver = useAtomValue(isContestOverAtom);
+    const [showContestOverModal, setShowContestOverModal] = useState(false);
     const [fullContest, setFullContest] = useState<FullContest | null>(null);
     const [currQuestion, setCurrQuestion] = useState<Question | null>(null);
     const [error, setError] = useState<string | null>(null);
@@ -29,10 +37,6 @@ export default function ContestPage({params} : {
     const {id} = use(params);
 
     const router = useRouter();
-
-    function onQuestionClick(question: Question) {
-        setCurrQuestion(question);
-    }
 
     useEffect(() => {
         async function fetchContestJoinedAt() {
@@ -43,7 +47,7 @@ export default function ContestPage({params} : {
                 return "Error in fetching contest joining time";
             } else if (response.status != 200) {
                 const data = response.data as any;
-                showErrorToast(data.error);
+                showErrorToast("You have not joined this contest");
                 return data.error;
             } else {
                 let data = response.data as any;
@@ -69,14 +73,14 @@ export default function ContestPage({params} : {
             }
         }
 
-
-        async function run() {
+        async function init() {
             let error = await fetchContestJoinedAt();
             if (error) {
-                setError(error);
+                setError("You have not joined this contest");
                 return;
             }
-            await fetchFullContest();
+            connectWs();
+            await fetchFullContest(); 
         }
         
         let token = localStorage.getItem("token");
@@ -88,7 +92,7 @@ export default function ContestPage({params} : {
             return;
         }
 
-        run()
+        init();
 
         return () => {
             setContestJoinedAt(null);
@@ -96,11 +100,42 @@ export default function ContestPage({params} : {
     }, [user]);
 
     useEffect(() => {
+        if (!ws) {
+            console.log("WS is null");
+            return;
+        }
+
+        if (ws.readyState !== WebSocket.OPEN) {
+            console.log("WS is not open");
+            return;
+        }
+
+        let msg: WebSocketMessage = {
+            JoinContest: {
+                contest_id: id
+            }
+        }; 
+
+        ws.send(JSON.stringify(msg));
+    }, [ws, isWsOpen]);
+
+    useEffect(() => {
+        if (currentQuestionId != null && fullContest != null) {
+            let currQuestion = fullContest.questions.filter(q => q.id === currentQuestionId)[0];
+            setCurrQuestion(currQuestion);
+        }
+    }, [currentQuestionId])
+
+    useEffect(() => {
         const interval = setInterval(() => setContestSeconds(prev => prev! + 1), 1000);
 
         return () => {
             clearInterval(interval);
             setContestSeconds(null);
+            if (ws != null) {
+                ws.close();
+                setWs(null);
+            }
         }
     }, []);
 
@@ -116,9 +151,15 @@ export default function ContestPage({params} : {
         </div>
     }
 
+    if (fullContest.contest.status === "Closed" || isContestOver) {
+        return <div>
+            <ContestEndModal closeModal={() => setShowContestOverModal(false)}/>
+        </div>
+    }
+
     return <div className="flex-1 h-screen min-h-0 py-5 px-10">
         <div className="flex flex-1 h-full min-h-0 justify-between gap-20">
-            <QuestionSidebar questions={fullContest.questions as Question[]} onClick={onQuestionClick} />
+            <QuestionSidebar questions={fullContest.questions as Question[]} />
             <QuestionScreen question={currQuestion}/>
         </div>
     </div>

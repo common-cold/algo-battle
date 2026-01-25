@@ -212,4 +212,4 @@ pub async fn get_contest_joined_at(app_data: Data<AppData>, query: web::Query<Ge
             }))
         }
     }
-}
+}    

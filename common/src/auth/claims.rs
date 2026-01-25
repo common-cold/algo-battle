@@ -4,6 +4,12 @@ use uuid::Uuid;
 
 use crate::Role;
 
+#[derive(Serialize, Deserialize)]
+pub enum WebsocketAuth {
+    User(JwtClaims),
+    Service
+}
+
 
 #[derive(Serialize, Deserialize)]
 pub struct JwtClaims {
