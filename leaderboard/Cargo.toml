@@ -1,0 +1,13 @@
+[package]
+name = "leaderboard"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+db = {path = "../db"}
+redis-service = {path = "../redis-service"}
+
+redis = { version = "1.0.2", features = ["connection-manager", "aio", "tokio-comp"] }
+uuid = "1.20.0"
+anyhow = "1.0.100"
+tokio = "1.48.0"

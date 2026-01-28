@@ -52,3 +52,9 @@ export interface FullContest {
     contest: Contest,
     questions: Question[]
 }
+
+export interface SubmitQuestionArgs {
+    contest_id: string,
+    question_id: string,
+    selected_option: number
+}

@@ -84,6 +84,7 @@ pub struct GetContestJoinedAt {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SubmitQuestionArgs {
+    pub contest_id: Uuid,
     pub question_id: Uuid,
     pub selected_option: i16
 }

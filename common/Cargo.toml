@@ -14,3 +14,5 @@ jsonwebtoken = {version = "10.2.0", features = ["rust_crypto"]}
 chrono = "0.4.43"
 actix-web = "4.12.1"
 dotenv = "0.15.0"
+redis = { version = "1.0.2", features = ["connection-manager"] }
+anyhow = "1.0.100"

@@ -104,7 +104,8 @@ impl ContestManager {
                 let message = WebSocketResponse {
                     data: common::ResponseData::NextQuestion(NextQuestionArgs {
                         question_id: contest.current_question_id.unwrap(),
-                        contest_id: contest_id
+                        contest_id: contest_id,
+                        new_rank: -1
                     })
                 };
 

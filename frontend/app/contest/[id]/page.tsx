@@ -4,7 +4,7 @@ import { ContestEndModal } from "@/components/contest-page/ContestEndModal";
 import QuestionScreen from "@/components/contest-page/QuestionScreen";
 import QuestionSidebar from "@/components/contest-page/QuestionSidebar";
 import { showErrorToast } from "@/components/ContestInfo";
-import { connectWsAtom, contestEndDateAtom, contestJoinedAtAtom, contestSecondsAtom, currentQuestionIdAtom, isContestOverAtom, isWsOpenAtom, userAtom, wsAtom } from "@/store/atom";
+import { connectWsAtom, contestEndDateAtom, contestJoinedAtAtom, contestSecondsAtom, currentContestIdAtom, currentQuestionIdAtom, isContestOverAtom, isWsOpenAtom, userAtom, wsAtom } from "@/store/atom";
 import { Question } from "@/types/db";
 import { FullContest } from "@/types/routes";
 import { WebSocketMessage } from "@/types/ws";
@@ -23,6 +23,7 @@ export default function ContestPage({params} : {
     const [contestJoinedAt, setContestJoinedAt] = useAtom(contestJoinedAtAtom);
     const [contestEndDate, setContestEndDate] = useAtom(contestEndDateAtom);
     const [contestSeconds, setContestSeconds] = useAtom(contestSecondsAtom);
+    const [currentContestId, setCurrentContestId] = useAtom(currentContestIdAtom);
     const [ws, setWs] = useAtom(wsAtom);
     const isWsOpen = useAtomValue(isWsOpenAtom);
     const [_, connectWs] = useAtom(connectWsAtom);
@@ -128,10 +129,12 @@ export default function ContestPage({params} : {
 
     useEffect(() => {
         const interval = setInterval(() => setContestSeconds(prev => prev! + 1), 1000);
+        setCurrentContestId(id);
 
         return () => {
             clearInterval(interval);
             setContestSeconds(null);
+            setCurrentContestId(null);
             if (ws != null) {
                 ws.close();
                 setWs(null);

@@ -1,9 +1,11 @@
-use std::sync::{Arc, Mutex};
+use std::{str::FromStr, sync::{Arc, Mutex}};
 
-use actix_web::{App, HttpRequest, HttpResponse, HttpServer, Result, get, rt, web::{Data, Payload}};
+use actix_web::{App, HttpRequest, HttpResponse, HttpServer, Result, body::MessageBody, get, rt, web::{Data, Payload}};
 use actix_ws::{Message, handle};
-use common::{NextQuestionArgs, Role, WebSocketMessage, WebSocketResponse, WebsocketAuth};
+use common::{Role, WebSocketMessage, WebsocketAuth};
 use db::Database;
+use leaderboard::LeaderboardService;
+use redis_service::RedisConnection;
 use tokio::sync::mpsc;
 use uuid::Uuid;
 
@@ -16,7 +18,8 @@ mod service;
 #[derive(Clone)]
 pub struct WsData {
     pub database: Database,
-    pub contest_manager: Arc<Mutex<ContestManager>>
+    pub contest_manager: Arc<Mutex<ContestManager>>,
+    pub leaderboard_service: LeaderboardService
 }
 
 #[get("/ws")]
@@ -25,7 +28,8 @@ pub async fn ws_handler(request: HttpRequest, body: Payload, state: Data<WsData>
     let (tx, mut rx) = mpsc::channel::<String>(32);
 
     let contest_manager = state.contest_manager.clone();
-    let database = state.database.clone();
+    let _database = state.database.clone();
+    let leaderboard_service = state.leaderboard_service.clone();
 
     let mut user_id: Option<Uuid> = None;
     let mut username: Option<String> = None;
@@ -72,7 +76,12 @@ pub async fn ws_handler(request: HttpRequest, body: Payload, state: Data<WsData>
                                 if let Err(e) = cm.join_contest(user_id.unwrap(), args.contest_id).await {
                                     let log = prepare_log(e.to_string(), true);
                                     let _ = session.text(log).await;
+                                    continue;
                                 }    
+                                if let Err(e) = leaderboard_service.add_user_to_leaderboard(args.contest_id, user_id.unwrap()).await {
+                                    let log = prepare_log(e.to_string(), true);
+                                    let _ = session.text(log).await;
+                                }
                             },
 
                             (WebsocketAuth::User(_), WebSocketMessage::Debug) => {
@@ -125,17 +134,22 @@ pub async fn main() -> Result<()> {
     let db = Database::init_db().await.unwrap();
     let db_clone = db.clone();
     
+    let redis = RedisConnection::init_redis().await.unwrap();
+
+    let leaderboard_service = LeaderboardService::new(db.clone(), redis.connection_manager);
+
     let contest_manager = ContestManager::sync_active_contests_from_db(&db).await.unwrap();
     let mut_contest_manager = Arc::new(Mutex::new(contest_manager));
     let contest_manager_clone = mut_contest_manager.clone();
 
     let state = WsData {
         database: db,
-        contest_manager: mut_contest_manager
+        contest_manager: mut_contest_manager,
+        leaderboard_service: leaderboard_service.clone()
     };
 
     tokio::spawn(async move {
-        broadcast_next_question_task(&db_clone, contest_manager_clone).await;
+        broadcast_next_question_task(&db_clone, contest_manager_clone, leaderboard_service).await;
     });
 
     HttpServer::new(move || {

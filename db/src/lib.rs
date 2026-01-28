@@ -164,6 +164,22 @@ impl Database {
         Ok(questions)
     }
 
+    pub async fn get_correct_option_and_points(&self, question_id: Uuid) -> anyhow::Result<(i16, i16)> {
+        let record = sqlx::query!(
+            r#"
+                SELECT 
+                    correct_option,
+                    points
+                FROM QUESTIONS WHERE
+                   id = $1  
+            "#,
+            question_id
+        ).fetch_one(&self.pool)
+        .await?;
+        
+        Ok((record.correct_option, record.points))
+    }
+
     pub async fn get_all_examiner_questions(&self, examiner_id: Uuid) -> anyhow::Result<Vec<Question>> {
         let questions = sqlx::query_as!(
             Question,
@@ -420,6 +436,53 @@ impl Database {
         .collect::<Vec<Uuid>>();
         
         Ok(user_ids)
+    }
+
+
+    //leaderboard
+
+    pub async fn add_leaderboard(&self, contest_id: Uuid, user_id_scores: Vec<(Uuid, i16)>) -> anyhow::Result<()> {
+        let mut user_ids = Vec::<Uuid>::new();
+        let mut scores = Vec::<i16>::new();
+        let mut ranks = Vec::<i16>::new();
+
+        let mut txn = self.pool.begin().await?;
+
+        for (rank, (user_id, score)) in user_id_scores.iter().enumerate() {
+            user_ids.push(*user_id);
+            scores.push(*score);
+            ranks.push(rank as i16 + 1);
+        }
+        
+        sqlx::query!(
+            r#"
+                INSERT INTO LEADERBOARD (
+                    contest_id,
+                    user_id,
+                    score,
+                    rank
+                )    
+                SELECT 
+                    $1,
+                    user_id,
+                    score,
+                    rank
+                FROM UNNEST (
+                    $2::uuid[],
+                    $3::int2[],
+                    $4::int2[]
+                ) AS t (user_id, score, rank)
+            "#,
+            contest_id,
+            &user_ids,
+            &scores,
+            &ranks
+        ).execute(&mut *txn)
+        .await?;
+
+        txn.commit().await?;
+        
+        Ok(())
     }
 
 }

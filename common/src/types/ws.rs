@@ -43,7 +43,8 @@ pub struct LogArgs {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct NextQuestionArgs {
     pub question_id: Uuid,
-    pub contest_id: Uuid
+    pub contest_id: Uuid,
+    pub new_rank: i32
 }
 
 #[derive(Debug, Serialize, Deserialize)]

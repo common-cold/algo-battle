@@ -62,3 +62,12 @@ pub struct Contest {
     pub owner_id: Uuid,
     pub created_at: i64
 }
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct Leaderboard {
+    pub contest_id: Uuid,
+    pub user_id: Uuid,
+    pub score: i16,
+    pub rank: i16,
+    pub created_at: i64
+}

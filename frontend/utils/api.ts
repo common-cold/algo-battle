@@ -1,4 +1,4 @@
-import { API_BASE_URL, CreateContestArgs, CreateQuestionArgs, GetContestsArgs, GetQuestionArgs, GetQuestionsByIdArgs, SignInArgs, SignupArgs } from "@/types/routes";
+import { API_BASE_URL, CreateContestArgs, CreateQuestionArgs, GetContestsArgs, GetQuestionArgs, GetQuestionsByIdArgs, SignInArgs, SignupArgs, SubmitQuestionArgs } from "@/types/routes";
 import axios from "axios";
 
 
@@ -149,6 +149,22 @@ export async function joinContest(contestId: string) {
 export async function getContestJoinedAt(userId: string, contestId: string) {
     try {
         const response = await axios.get(API_BASE_URL + `/contest/joinedAt?userId=${userId}&contestId=${contestId}`, {
+            validateStatus: () => true
+        });
+
+    return response;
+    } catch (e) {
+        return null;
+    }
+}
+
+export async function submitMcqQuestion(body: SubmitQuestionArgs) {
+    try {
+        let token = localStorage.getItem("token");
+        const response = await axios.post(API_BASE_URL + `/question/submit/mcq`, body, {
+            headers: {
+                Authorization: token
+            },
             validateStatus: () => true
         });
 

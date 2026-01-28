@@ -1,8 +1,10 @@
-import { contestEndDateAtom, contestJoinedAtAtom, contestSecondsAtom } from "@/store/atom";
+import { contestEndDateAtom, contestJoinedAtAtom, contestSecondsAtom, currentContestIdAtom, currentRankAtom } from "@/store/atom";
 import { Question } from "@/types/db"
 import { convertEpochToIsoFormat } from "@/utils/common";
-import { useAtom } from "jotai";
+import { useAtom, useAtomValue } from "jotai";
 import { useState } from "react";
+import { showErrorToast, showSuccessToast } from "../ContestInfo";
+import { submitMcqQuestion } from "@/utils/api";
 
 type QuestionScreenProps = {
     question: Question | null
@@ -18,7 +20,35 @@ export default function QuestionScreen({question}: QuestionScreenProps) {
     const [contestEndDate, ] = useAtom(contestEndDateAtom);
     const [questionTime, ] = useState(question!.time_limit);
     const [contestSeconds, setContestSeconds] = useAtom(contestSecondsAtom);
+    const currentContestId = useAtomValue(currentContestIdAtom);
+    const currentRank = useAtomValue(currentRankAtom);
     const [selectedOption, setSelectedOption] = useState<number | null>(null);
+
+    async function handleSubmit() {
+        if (selectedOption == null) {
+            showErrorToast("Select an option");
+            return;
+        }
+
+        if (!question || !currentContestId) {
+            return;
+        }
+
+        const response = await submitMcqQuestion({
+            contest_id: currentContestId,
+            question_id: question.id,
+            selected_option: selectedOption
+        });
+
+        if (!response) {
+            showErrorToast("Error in submitting answer");
+        } else if (response.status != 200) {
+            const data = response.data as any;
+            showErrorToast(data.error);
+        } else {
+            showSuccessToast("Question submitted successfully");
+        }
+    }
 
     if (!question) {
         return <div></div>
@@ -32,8 +62,7 @@ export default function QuestionScreen({question}: QuestionScreenProps) {
             className={`inputBox px-3 py-3 w-100 ${selectedOption == index ? "bg-[#93C5FD]! text-[#0f1117]! font-bold" : ""} cursor-pointer`}>
             {question!.options[index]}
         </div>
-    }    
-
+    }
 
     return <div className="flex flex-1 min-h-0 flex-col gap-10 items-center">
         <div className="flex justify-between gap-80">
@@ -42,7 +71,7 @@ export default function QuestionScreen({question}: QuestionScreenProps) {
                     {`Time Left: ${convertEpochToIsoFormat(contestEndDate! - contestSeconds!)}`}
                 </div>
                 <div className="textBgStyle4 px-3 py-2 rounded-[10px]">
-                    Rank: 105th
+                    {currentRank}
                 </div>
             </div>
             
@@ -64,7 +93,8 @@ export default function QuestionScreen({question}: QuestionScreenProps) {
             </div>
         </div>   
 
-        <div className="textBgStyle5 px-3 py-2 rounded-[10px]">
+        <div onClick={() => {handleSubmit()}}
+            className="textBgStyle5 px-3 py-2 rounded-[10px]">
             Submit
         </div>
     </div>

@@ -21,7 +21,8 @@ export interface LogArgs {
 
 export interface NextQuestionArgs {
     question_id: string,
-    contest_id: string
+    contest_id: string,
+    new_rank: number
 }
 
 export interface EndContestArgs {
