@@ -18,7 +18,7 @@ pub struct SignInArgs {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct CreateQuestionArgs {
+pub struct CreateMcqQuestionArgs {
     pub question_type: QuestionType,
     pub title: String,
     pub description: String,
@@ -61,11 +61,11 @@ pub struct QuestionWithoutAnswer {
     pub question_type: QuestionType,
     pub title: String,
     pub description: String,
-    pub options: Vec<String>,
+    pub options: Option<Vec<String>>,
     pub time_limit: i64,
     pub points: i16,
-    pub owner_id: Uuid,
-    pub created_at: i64
+    pub testcase_input: Option<String>,
+    pub testcase_output: Option<String>
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -96,4 +96,37 @@ pub struct UpdateContestArgs {
     pub start_date: Option<i64>,
     pub end_date: Option<i64>,
     pub status: Option<ContestStatus>
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CreateDsaQuestionArgs {
+    pub title: String,
+    pub description: String,
+    pub time_limit: i64,
+    pub points: i16,
+    pub testcase_input: String,
+    pub testcase_output: String
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CreateBulkBoilerPlateCodeArgs {
+    pub problem_id: Uuid,
+    pub language_ids: Vec<i16>,
+    pub partial_codes: Vec<String>,
+    pub full_codes: Vec<String>
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CreateBulkTestCasesArgs {
+    pub problem_id: Uuid,
+    pub inputs: Vec<String>,
+    pub outputs: Vec<String>
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CreateDsaSubmissionArgs {
+    pub problem_id: Uuid,
+    pub contest_id: Uuid,
+    pub user_id: Uuid,
+    pub status: String, 
 }

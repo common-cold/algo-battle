@@ -29,7 +29,7 @@ export async function signin(body: SignInArgs) {
 export async function createQuestion(body: CreateQuestionArgs) {
     try {
         let token = localStorage.getItem("token");
-        const response = await axios.post(API_BASE_URL + "/question/create", body, {
+        const response = await axios.post(API_BASE_URL + "/question/create/mcq", body, {
             headers: {
                 Authorization: token
             },
@@ -54,13 +54,25 @@ export async function getQuestionsById(body: GetQuestionsByIdArgs) {
     }
 }
 
-export async function getAllExaminerQuestions(body: GetQuestionArgs) {
+export async function getAllExaminerMcqQuestions(body: GetQuestionArgs) {
     try {
         let token = localStorage.getItem("token");
-        const response = await axios.post(API_BASE_URL + "/question/all/examiner", body, {
+        const response = await axios.post(API_BASE_URL + "/question/all/examiner/mcq", body, {
             headers: {
                 Authorization: token
             },
+            validateStatus: () => true
+        });
+
+    return response;
+    } catch (e) {
+        return null;
+    }
+}
+
+export async function getAllDsaQuestions() {
+    try {
+        const response = await axios.get(API_BASE_URL + "/question/dsa/all", {
             validateStatus: () => true
         });
 
@@ -165,6 +177,18 @@ export async function submitMcqQuestion(body: SubmitQuestionArgs) {
             headers: {
                 Authorization: token
             },
+            validateStatus: () => true
+        });
+
+    return response;
+    } catch (e) {
+        return null;
+    }
+}
+
+export async function getAllBoilerplateCodes(questionId: string) {
+    try {
+        const response = await axios.get(API_BASE_URL + `/boilerplate/${questionId}`, {
             validateStatus: () => true
         });
 

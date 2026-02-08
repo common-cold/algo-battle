@@ -10,7 +10,7 @@ type QuestionSidebarProps = {
 export default function QuestionSidebar({questions}: QuestionSidebarProps) {
     const currentQuestionId = useAtomValue(currentQuestionIdAtom);
 
-   return  <div className="flex min-h-0 flex-col gap-5 border-2 border-[#1F2937] rounded-[10px] w-1/4 px-3 py-3">
+   return  <div className="flex min-h-0 flex-col gap-5 border-2 border-[#1F2937] rounded-[10px] w-1/5 px-3 py-3">
         <div className="text-left font-bold textColor2 text-[25px] px-2">
             Questions
         </div>

@@ -58,6 +58,13 @@ body {
   cursor: pointer;
 }
 
+.button5 {
+  background-color: #F87171;
+  color: #0f1117;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
 .contestRow {
   background: var(--card);
   border-radius: 10px;

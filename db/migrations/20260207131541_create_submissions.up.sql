@@ -1,0 +1,10 @@
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+CREATE TABLE SUBMISSIONS (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    problem_id UUID REFERENCES dsa_questions(id) ON DELETE CASCADE,
+    contest_id UUID REFERENCES contests(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    status TEXT NOT NULL,
+    created_at BIGINT NOT NULL DEFAULT EXTRACT(EPOCH FROM NOW())
+)

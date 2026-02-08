@@ -9,7 +9,7 @@ for (int i=0; i< size_arr0; i++) {
 }
 int target;
 cin>>target;
-int result;
+vector<int> result;
 result = twoSum(arr, target);
 cout<<result;
 

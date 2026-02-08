@@ -44,6 +44,8 @@ impl ContestManager {
             .map(|q| q.time_limit )
             .collect::<Vec<i64>>();
             
+            println!("Q times: {:?}", question_times);
+
             let user_ids_joined = db.get_contest_user_ids(contest.id).await?;
             let users: HashSet<Uuid> = user_ids_joined.into_iter().collect();
             

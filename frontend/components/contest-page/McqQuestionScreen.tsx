@@ -15,16 +15,11 @@ type OptionProps = {
     onClick: () => void
 }
 
-export default function QuestionScreen({question}: QuestionScreenProps) {
-    const [contestJoinedAt, ] = useAtom(contestJoinedAtAtom);
-    const [contestEndDate, ] = useAtom(contestEndDateAtom);
-    const [questionTime, ] = useState(question!.time_limit);
-    const [contestSeconds, setContestSeconds] = useAtom(contestSecondsAtom);
+export default function McqQuestionScreen({question}: QuestionScreenProps) {
     const currentContestId = useAtomValue(currentContestIdAtom);
-    const currentRank = useAtomValue(currentRankAtom);
     const [selectedOption, setSelectedOption] = useState<number | null>(null);
 
-    async function handleSubmit() {
+    async function handleMcqSubmit() {
         if (selectedOption == null) {
             showErrorToast("Select an option");
             return;
@@ -60,25 +55,18 @@ export default function QuestionScreen({question}: QuestionScreenProps) {
             onClick()
         }}
             className={`inputBox px-3 py-3 w-100 ${selectedOption == index ? "bg-[#93C5FD]! text-[#0f1117]! font-bold" : ""} cursor-pointer`}>
-            {question!.options[index]}
+            {question!.options![index]}
         </div>
     }
 
-    return <div className="flex flex-1 min-h-0 flex-col gap-10 items-center">
-        <div className="flex justify-between gap-80">
-            <div className="flex justify-centre gap-5">
-                <div className="textBgStyle2 px-3 py-2 rounded-[10px]">
-                    {`Time Left: ${convertEpochToIsoFormat(contestEndDate! - contestSeconds!)}`}
-                </div>
-                <div className="textBgStyle4 px-3 py-2 rounded-[10px]">
-                    {currentRank}
-                </div>
+    return <div className="flex flex-1 min-h-0 flex-col gap-10 items-center w-full">
+        <div className="flex flex-col gap-5 min-h-0 w-full max-h-1/2 border-2 border-[#1F2937] rounded-[10px] text-left px-3 py-3 font-medium overflow-y-auto whitespace-pre-line">
+            <div className="font-bold text-2xl">
+                {question.title}
             </div>
-            
-        </div>
-
-        <div className="flex min-h-0 w-full max-h-1/2 border-2 border-[#1F2937] rounded-[10px] text-left px-3 py-3 font-medium overflow-y-auto">
-            {question.description}
+            <div>
+                {question.description}
+            </div>
         </div>
 
         <div className="flex flex-col items-center gap-2">
@@ -93,7 +81,7 @@ export default function QuestionScreen({question}: QuestionScreenProps) {
             </div>
         </div>   
 
-        <div onClick={() => {handleSubmit()}}
+        <div onClick={() => {handleMcqSubmit()}}
             className="textBgStyle5 px-3 py-2 rounded-[10px]">
             Submit
         </div>

@@ -1,5 +1,5 @@
 import { showErrorToast, showSuccessToast } from "@/components/ContestInfo";
-import { Question } from "@/types/db";
+import { BoilerplateCode, Question } from "@/types/db";
 import { JwtPayload } from "@/types/frontend";
 import { CreateContestArgs, WS_BASE_URL } from "@/types/routes";
 import { EndContestArgs, LogArgs, NextQuestionArgs, ResponseData, WebSocketResponse } from "@/types/ws";
@@ -81,3 +81,4 @@ export const currentQuestionIdAtom = atom<string | null>(null);
 export const isContestOverAtom = atom<boolean>(false);
 export const currentRankAtom = atom<number | null>(null);
 export const currentContestIdAtom = atom<string | null>(null);
+export const boilerplateCodesAtom = atom<Map<number, BoilerplateCode> | null>(null);

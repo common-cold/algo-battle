@@ -1,6 +1,8 @@
 use std::{collections::HashMap, fs};
 
 use anyhow::{Ok, anyhow};
+use common::{CreateBulkBoilerPlateCodeArgs, CreateBulkTestCasesArgs, CreateDsaQuestionArgs, LANGUAGE_ID_MAP, QuestionType};
+use db::Database;
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 use indoc::indoc;
@@ -116,7 +118,188 @@ impl QuestionGenerator {
         })
     }
 
-    pub fn generate_cpp_code_partial(&self, output_path: String) -> anyhow::Result<()> {
+    pub async fn save_to_db(problem: String, path: String, question_name: String) -> anyhow::Result<()> {
+        let input_path: String = format!("{}/input", path);
+        let output_path: String = format!("{}/output", path);
+
+        let cpp_path_full: String = format!("{}/full/{}_full.cpp", path, question_name);
+        let js_path_full: String = format!("{}/full/{}_full.js", path, question_name);
+        let rust_path_full: String = format!("{}/full/{}_full.rs", path, question_name);
+    
+        let cpp_path: String = format!("{}/partial/{}.cpp", path, question_name);
+        let js_path: String = format!("{}/partial/{}.js", path, question_name);
+        let rust_path: String = format!("{}/partial/{}.rs", path, question_name);
+
+        let db = Database::init_db().await?;
+
+        let mut problem_name: Option<String> = None;
+        let mut description: Option<String> = None;
+        let mut testcase_input: Option<String> = None;
+        let mut testcase_output: Option<String> = None;
+        let mut time_limit: Option<i64> = None;
+        let mut points: Option<i16> = None;
+
+        let mut is_description_text = false;
+        let mut is_testcase_input = false;
+        let mut is_testcase_output = false;
+
+        for line in problem.lines() {
+            if line.starts_with("Problem Name:") {
+                let value = line.split(':')
+                    .nth(1).expect("Problem name is empty")
+                    .trim()
+                    .trim_matches('"')
+                    .to_string();
+                problem_name = Some(value);
+            } else if line.starts_with("Description:") {
+                let value = line.split(':')
+                    .nth(1).expect("Description is empty")
+                    .trim()
+                    .trim_matches('"')
+                    .to_string();     
+                description = Some(value); 
+                is_description_text = true;
+            } else if line.starts_with("Testcase Input:") {
+                let value = line.split(':')
+                    .nth(1).expect("Input Field is empty")
+                    .trim()
+                    .trim_matches('"')
+                    .to_string();
+                testcase_input = Some(value);
+                is_description_text = false; 
+                is_testcase_input = true;
+            } else if line.starts_with("Testcase Output") {
+                let value = line.split(':')
+                    .nth(1).expect("Output Field is empty")
+                    .trim()
+                    .trim_matches('"')
+                    .to_string();
+                testcase_output = Some(value);
+                is_testcase_input = false;
+                is_testcase_output = true;
+            } else if line.starts_with("Time Limit") {
+                let value = line.split(':')
+                    .nth(1).expect("Time Limit is empty")
+                    .trim()
+                    .trim_matches('"')
+                    .parse::<i64>()?;
+
+                time_limit = Some(value * 60);
+            } else if line.starts_with("Points") {
+                let value = line.split(':')
+                    .nth(1).expect("Points is empty")
+                    .trim()
+                    .trim_matches('"')
+                    .parse::<i16>()?;
+
+                points = Some(value);
+            } else if is_description_text {
+                let value = line.trim()
+                    .trim_matches('"').to_string();
+                description.as_mut().unwrap().push_str(&format!(indoc! {"
+
+                {}"}, &value));
+            } else if is_testcase_input {
+                let value = line.trim()
+                    .trim_matches('"').to_string();
+                testcase_input.as_mut().unwrap().push_str(&format!(indoc! {"
+
+                {}"}, &value));
+            } else if is_testcase_output {
+                let value = line.trim()
+                    .trim_matches('"').to_string();
+                testcase_output.as_mut().unwrap().push_str(&format!(indoc! {"
+
+                {}"}, &value));
+            }
+        }
+
+        if problem_name.is_none() || description.is_none() || testcase_input.is_none() || testcase_output.is_none()
+            || time_limit.is_none() || points.is_none() {
+            return Err(anyhow!("Wrong structure"));
+        }
+
+        //create entry in question table
+        let question = db.create_question(QuestionType::Dsa, None).await?;
+
+        //create entry in dsa question table
+        let _dsa_question = db.create_dsa_question(CreateDsaQuestionArgs {
+            title: problem_name.unwrap(),
+            description: description.unwrap(),
+            time_limit: time_limit.unwrap(),
+            points: points.unwrap(),
+            testcase_input: testcase_input.unwrap(),
+            testcase_output: testcase_output.unwrap()
+        }, question.id).await?;
+
+        //add boilerplate code
+        let mut language_ids = Vec::new();
+        let mut partial_codes = Vec::new();
+        let mut full_codes = Vec::new();
+
+        language_ids.push(LANGUAGE_ID_MAP.get("c++").unwrap().clone());
+        let cpp_partial = fs::read_to_string(cpp_path)?;
+        partial_codes.push(cpp_partial);
+        let cpp_full = fs::read_to_string(cpp_path_full)?;
+        full_codes.push(cpp_full);
+
+        language_ids.push(LANGUAGE_ID_MAP.get("javascript").unwrap().clone());
+        let js_partial = fs::read_to_string(js_path)?;
+        partial_codes.push(js_partial);
+        let js_full = fs::read_to_string(js_path_full)?;
+        full_codes.push(js_full);
+
+        language_ids.push(LANGUAGE_ID_MAP.get("rust").unwrap().clone());
+        let rust_partial = fs::read_to_string(rust_path)?;
+        partial_codes.push(rust_partial);
+        let rust_full = fs::read_to_string(rust_path_full)?;
+        full_codes.push(rust_full);
+
+        let boilerplate_args = CreateBulkBoilerPlateCodeArgs {
+            problem_id: question.id,
+            language_ids: language_ids,
+            partial_codes: partial_codes,
+            full_codes: full_codes
+        };
+        
+        db.create_bulk_boilerplate_code(boilerplate_args).await?;
+
+        //add testcases
+        let mut inputs = Vec::new();
+        for entry in fs::read_dir(input_path)? {
+            let entry = entry?;
+            let path = entry.path();
+
+            if path.is_file() {
+                let content = fs::read_to_string(path)?;
+                inputs.push(content);
+            }
+        }
+
+        let mut outputs = Vec::new();
+        for entry in fs::read_dir(output_path)? {
+            let entry = entry?;
+            let path = entry.path();
+
+            if path.is_file() {
+                let content = fs::read_to_string(path)?;
+                outputs.push(content);
+            }
+        }
+    
+        let testcase_args = CreateBulkTestCasesArgs {
+            problem_id: question.id,
+            inputs: inputs,
+            outputs: outputs
+        };
+
+        db.create_bulk_testcases(testcase_args).await?;
+        
+        Ok(())
+    }
+
+
+    pub fn generate_cpp_code_partial(&self, output_path: &String) -> anyhow::Result<()> {
         let tup = self.output_fields[0].clone();
         let key = tup.1;
 
@@ -170,7 +353,7 @@ impl QuestionGenerator {
         Ok(())
     }
 
-    pub fn generate_cpp_code_full(&self, output_path: String) -> anyhow::Result<()> {
+    pub fn generate_cpp_code_full(&self, output_path: &String) -> anyhow::Result<()> {
         let mut input_args = Vec::<String>::new();
         let mut code: String = String::from("");
 
@@ -258,12 +441,7 @@ impl QuestionGenerator {
     }
 
 
-    pub fn generate_js_code_partial(&self, output_path: String) -> anyhow::Result<()> {
-        let tup = self.output_fields[0].clone();
-        let key = tup.1;
-
-        let return_type = JS_TYPES.get(key.as_str());
-
+    pub fn generate_js_code_partial(&self, output_path: &String) -> anyhow::Result<()> {
         let mut input_args_str: String = String::from("");
 
         let input_len = self.input_fields.len();
@@ -299,7 +477,7 @@ impl QuestionGenerator {
         Ok(())
     }    
 
-    pub fn generate_js_code_full(&self, output_path: String) -> anyhow::Result<()> {
+    pub fn generate_js_code_full(&self, output_path: &String) -> anyhow::Result<()> {
         let mut input_args = Vec::<String>::new();
         
         let mut code: String = String::from("");
@@ -441,7 +619,7 @@ impl QuestionGenerator {
     }
 
 
-    pub fn generate_rust_code_partial(&self, output_path: String) -> anyhow::Result<()> {
+    pub fn generate_rust_code_partial(&self, output_path: &String) -> anyhow::Result<()> {
         let tup = self.output_fields[0].clone();
         let key = tup.1;
 
@@ -481,7 +659,7 @@ impl QuestionGenerator {
         Ok(())
     }
 
-    pub fn generate_rust_code_full(&self, output_path: String) -> anyhow::Result<()> {
+    pub fn generate_rust_code_full(&self, output_path: &String) -> anyhow::Result<()> {
         let mut input_args = Vec::<String>::new();
 
         let mut code: String = String::from("");

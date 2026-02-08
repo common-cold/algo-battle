@@ -9,6 +9,7 @@ use sqlx::types::Uuid;
 use tokio::{net::TcpStream, time::interval};
 use tokio_tungstenite::{MaybeTlsStream, WebSocketStream, connect_async, tungstenite::{client::IntoClientRequest}};
 
+
 pub async fn init_ws_connection() -> anyhow::Result<WebSocketStream<MaybeTlsStream<TcpStream>>> {
     let x_api_key_result = env::var("X_API_KEY");
     if x_api_key_result.is_err() {

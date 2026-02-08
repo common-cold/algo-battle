@@ -4,4 +4,4 @@ Input Structure:
 Input Field: list<int> arr
 Input Field: int target
 Output Structure:
-Output Field: int result
+Output Field: list<int> result

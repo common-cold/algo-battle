@@ -19,12 +19,12 @@ export interface Question {
     question_type: QuestionType,
     title: string,
     description: string,
-    options: Array<string>,
+    options?: Array<string>,
     correct_option?: number,
     time_limit: number,
     points: number,
-    owner_id: string,
-    created_at: number
+    testcase_input?: string,
+    testcase_output?: string
 }
 
 export interface Contest {
@@ -35,5 +35,14 @@ export interface Contest {
     end_date: number,
     status: ContestStatus,
     owner_id: string,
+    created_at: number
+}
+
+export interface BoilerplateCode {
+    id: string,
+    problem_id: string,
+    language_id: number,
+    partial_code: string,
+    full_code: string,
     created_at: number
 }

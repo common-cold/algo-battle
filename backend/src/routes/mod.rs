@@ -6,3 +6,6 @@ pub use question::*;
 
 pub mod contest;
 pub use contest::*;
+
+pub mod boilerplater_code;
+pub use boilerplater_code::*;

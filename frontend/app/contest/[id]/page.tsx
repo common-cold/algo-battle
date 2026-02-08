@@ -1,14 +1,16 @@
 "use client"
 
 import { ContestEndModal } from "@/components/contest-page/ContestEndModal";
-import QuestionScreen from "@/components/contest-page/QuestionScreen";
+import DsaQuestionScreen from "@/components/contest-page/DsaQuestionScreen";
+import McqQuestionScreen from "@/components/contest-page/McqQuestionScreen";
 import QuestionSidebar from "@/components/contest-page/QuestionSidebar";
 import { showErrorToast } from "@/components/ContestInfo";
-import { connectWsAtom, contestEndDateAtom, contestJoinedAtAtom, contestSecondsAtom, currentContestIdAtom, currentQuestionIdAtom, isContestOverAtom, isWsOpenAtom, userAtom, wsAtom } from "@/store/atom";
+import { connectWsAtom, contestEndDateAtom, contestJoinedAtAtom, contestSecondsAtom, currentContestIdAtom, currentQuestionIdAtom, currentRankAtom, isContestOverAtom, isWsOpenAtom, userAtom, wsAtom } from "@/store/atom";
 import { Question } from "@/types/db";
 import { FullContest } from "@/types/routes";
 import { WebSocketMessage } from "@/types/ws";
 import { getContestJoinedAt, getFullContest } from "@/utils/api";
+import { convertEpochToIsoFormat } from "@/utils/common";
 import { useAtom, useAtomValue } from "jotai";
 import { useRouter } from "next/navigation";
 import { use, useEffect, useState } from "react"
@@ -30,6 +32,7 @@ export default function ContestPage({params} : {
     const user = useAtomValue(userAtom);
     const currentQuestionId = useAtomValue(currentQuestionIdAtom);
     const isContestOver = useAtomValue(isContestOverAtom);
+    const currentRank = useAtomValue(currentRankAtom);
     const [showContestOverModal, setShowContestOverModal] = useState(false);
     const [fullContest, setFullContest] = useState<FullContest | null>(null);
     const [currQuestion, setCurrQuestion] = useState<Question | null>(null);
@@ -125,7 +128,7 @@ export default function ContestPage({params} : {
             let currQuestion = fullContest.questions.filter(q => q.id === currentQuestionId)[0];
             setCurrQuestion(currQuestion);
         }
-    }, [currentQuestionId])
+    }, [currentQuestionId, fullContest])
 
     useEffect(() => {
         const interval = setInterval(() => setContestSeconds(prev => prev! + 1), 1000);
@@ -161,9 +164,27 @@ export default function ContestPage({params} : {
     }
 
     return <div className="flex-1 h-screen min-h-0 py-5 px-10">
-        <div className="flex flex-1 h-full min-h-0 justify-between gap-20">
+        <div className="flex flex-1 h-full min-h-0 justify-between gap-10">
             <QuestionSidebar questions={fullContest.questions as Question[]} />
-            <QuestionScreen question={currQuestion}/>
+            <div className="flex flex-1 min-h-0 flex-col gap-10 items-center">
+                <div className="flex justify-between gap-80">
+                    <div className="flex justify-centre gap-5">
+                        <div className="textBgStyle2 px-3 py-2 rounded-[10px]">
+                            {`Time Left: ${convertEpochToIsoFormat(contestEndDate! - contestSeconds!)}`}
+                        </div>
+                        <div className="textBgStyle4 px-3 py-2 rounded-[10px]">
+                            {currentRank}
+                        </div>
+                    </div>
+                </div>
+                {
+                    currQuestion!.question_type == 'Mcq'
+                    ?
+                    <McqQuestionScreen question={currQuestion}/>
+                    :
+                    <DsaQuestionScreen question={currQuestion}/>
+                }
+            </div>        
         </div>
     </div>
 }

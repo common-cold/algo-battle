@@ -1,0 +1,10 @@
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+CREATE TABLE BOILERPLATE_CODES (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    problem_id UUID NOT NULL REFERENCES dsa_questions(id) ON DELETE CASCADE,
+    language_id SMALLINT NOT NULL,
+    partial_code TEXT NOT NULL,
+    full_code TEXT NOT NULL,
+    created_at BIGINT NOT NULL DEFAULT EXTRACT(EPOCH FROM NOW())
+)

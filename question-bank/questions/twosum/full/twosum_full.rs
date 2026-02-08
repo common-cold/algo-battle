@@ -12,7 +12,7 @@ for i in 0..size_arr0 {
     arr.push(it.next().unwrap().parse::<i32>().unwrap());
 }
 let target = it.next().unwrap().parse::<i32>().unwrap();
-let result: i32 ;
+let result: Vec<i32> ;
 result = twoSum(arr, target);
 println!("{}", result);
 

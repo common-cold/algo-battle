@@ -8,6 +8,6 @@ using std::cout;
 using std::vector;
 using std::string;
 
-int twoSum(vector<int>& arr, int target) {
+vector<int> twoSum(vector<int>& arr, int target) {
     //code goes here
 }

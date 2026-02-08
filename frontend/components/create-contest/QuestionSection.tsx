@@ -8,14 +8,23 @@ import { selectedQuestionsAtom } from "@/store/atom";
 import { showErrorToast } from "../ContestInfo";
 import { Question } from "@/types/db";
 import QuestionInfoList from "../QuestionInfoList";
+import ImportDsaQuestionModal from "./ImportDsaQuestionModal";
 
 
 
 export default function QuestionSection() {
     const selectedQuestions = useAtomValue(selectedQuestionsAtom);
     const [showImportQuestionModal, setshowImportQuestionModal] = useState(false);
+    const [showImportDsaQuestionModal, setshowImportDsaQuestionModal] = useState(false);
     const [showCreateQuestionModal, setshowCreateQuestionModal] = useState(false);
 
+    console.log(JSON.stringify(selectedQuestions));
+
+    if (showImportDsaQuestionModal) {
+        return <div>
+            <ImportDsaQuestionModal onClose={() => setshowImportDsaQuestionModal(false)}/>
+        </div>
+    }
 
     if (showImportQuestionModal) {
         return <div>
@@ -35,13 +44,17 @@ export default function QuestionSection() {
                 Questions
             </div>
             <div className="flex justify-between text-[18px] gap-3">
+                <div onClick={() => setshowImportDsaQuestionModal((prev) => !prev)}
+                    className="button5 px-3 font-medium">
+                    Import Dsa Questions
+                </div>
                 <div onClick={() => setshowImportQuestionModal((prev) => !prev)}
                     className="button2 px-3 font-medium">
-                    Import Questions
+                    Import Mcq Questions
                 </div>
                 <div onClick={() => setshowCreateQuestionModal((prev) => !prev)} 
                     className="button3 px-3 font-medium">
-                    Create New Question
+                    Create New Mcq Question
                 </div>
             </div>
         </div>

@@ -26,7 +26,17 @@ export function SaveContestButton() {
             return;
         }
 
-        let questionIds = selectedQuestions.map(q => q.id);
+        let mcqQuestionIds: string[] = [];
+        let dsaQuestionIds:string[] = [];
+        selectedQuestions.forEach(q => {
+            if (q.question_type === "Mcq") {
+                mcqQuestionIds.push(q.id); 
+            } else if (q.question_type == "Dsa") {
+                dsaQuestionIds.push(q.id);
+            }
+        });
+        
+        let questionIds = mcqQuestionIds.concat(dsaQuestionIds);
         
         let body: CreateContestArgs = {
             title: contestDetail?.title,

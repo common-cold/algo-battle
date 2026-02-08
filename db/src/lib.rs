@@ -1,7 +1,7 @@
 use std::env;
 
 use anyhow::Ok;
-use common::{Contest, ContestStatus, CreateContestArgs, CreateQuestionArgs, CreateUserArgs, GetContestArgs, Question, QuestionType, QuestionWithoutAnswer, Role, UpdateContestArgs, User};
+use common::{BoilerplateCode, Contest, ContestStatus, CreateBulkBoilerPlateCodeArgs, CreateBulkTestCasesArgs, CreateContestArgs, CreateDsaQuestionArgs, CreateDsaSubmissionArgs, CreateMcqQuestionArgs, CreateUserArgs, DsaQuestion, GetContestArgs, McqQuestion, Question, QuestionType, QuestionWithoutAnswer, Role, UpdateContestArgs, User};
 use sqlx::{Pool, Postgres, QueryBuilder, postgres::PgPoolOptions, types::Uuid};
 use dotenv::dotenv;
 
@@ -98,40 +98,22 @@ impl Database {
 
     
     //question
-    pub async fn create_question(&self, args: CreateQuestionArgs, owner_id: Uuid) -> anyhow::Result<Question> {
+    pub async fn create_question(&self, question_type: QuestionType, owner_id: Option<Uuid>) -> anyhow::Result<Question> {
         let question = sqlx::query_as!(
             Question,
             r#"
                 INSERT INTO QUESTIONS (
                     question_type, 
-                    title, 
-                    description, 
-                    options,
-                    correct_option,
-                    time_limit,
-                    points,
                     owner_id
                 )
-                VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+                VALUES ($1, $2)
                 RETURNING 
                     id, 
-                    question_type AS "question_type: QuestionType", 
-                    title, 
-                    description, 
-                    options,
-                    correct_option,
-                    time_limit,
-                    points,
+                    question_type AS "question_type: QuestionType",
                     owner_id,
                     created_at
             "#,
-            args.question_type as QuestionType,
-            args.title,
-            args.description,
-            args.options.as_slice(),
-            args.correct_option,
-            args.time_limit,
-            args.points,
+            question_type as QuestionType,
             owner_id
         )
         .fetch_one(&self.pool)
@@ -140,7 +122,95 @@ impl Database {
         Ok(question)
     }
 
+
+    pub async fn create_mcq_question(&self, args: CreateMcqQuestionArgs, question_id: Uuid) -> anyhow::Result<McqQuestion> {
+        let question = sqlx::query_as!(
+            McqQuestion,
+            r#"
+                INSERT INTO MCQ_QUESTIONS (
+                    id,
+                    question_type,
+                    title, 
+                    description, 
+                    options,
+                    correct_option,
+                    time_limit,
+                    points
+                )
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+                RETURNING 
+                    id, 
+                    question_type AS "question_type: QuestionType",
+                    title, 
+                    description, 
+                    options,
+                    correct_option,
+                    time_limit,
+                    points
+            "#,
+            question_id,
+            QuestionType::Mcq as QuestionType,
+            args.title,
+            args.description,
+            args.options.as_slice(),
+            args.correct_option,
+            args.time_limit,
+            args.points
+        )
+        .fetch_one(&self.pool)
+        .await?;
+
+        Ok(question)
+    }
+
+    pub async fn create_dsa_question(&self, args: CreateDsaQuestionArgs, question_id: Uuid) -> anyhow::Result<DsaQuestion> {
+        let question = sqlx::query_as!(
+            DsaQuestion,
+            r#"
+                INSERT INTO DSA_QUESTIONS (
+                    id,
+                    question_type,
+                    title,  
+                    description, 
+                    time_limit,
+                    points,
+                    testcase_input,
+                    testcase_output
+                )
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+                RETURNING 
+                    id, 
+                    question_type AS "question_type: QuestionType",
+                    title, 
+                    description, 
+                    time_limit,
+                    points,
+                    testcase_input,
+                    testcase_output
+            "#,
+            question_id,
+            QuestionType::Dsa as QuestionType,
+            args.title,
+            args.description,
+            args.time_limit,
+            args.points,
+            args.testcase_input,
+            args.testcase_output
+        )
+        .fetch_one(&self.pool)
+        .await?;
+
+        Ok(question)
+    }
+
     pub async fn get_questions_by_id(&self, question_ids: Vec<Uuid>) -> anyhow::Result<Vec<QuestionWithoutAnswer>> {
+        let mcq_questions = self.get_mcq_questions_by_id(question_ids.clone()).await?;
+        let dsa_questions = self.get_dsa_questions_by_id(question_ids).await?;
+        let question_list = [mcq_questions, dsa_questions].concat();
+        Ok(question_list)
+    }
+
+    pub async fn get_mcq_questions_by_id(&self, question_ids: Vec<Uuid>) -> anyhow::Result<Vec<QuestionWithoutAnswer>> {
         let questions = sqlx::query_as!(
             QuestionWithoutAnswer,
             r#"
@@ -152,9 +222,33 @@ impl Database {
                     options,
                     time_limit,
                     points,
-                    owner_id,
-                    created_at
-                FROM QUESTIONS WHERE
+                    NULL::text as testcase_input,
+                    NULL::text as testcase_output
+                FROM MCQ_QUESTIONS WHERE
+                   id = ANY($1)     
+            "#,
+            &question_ids
+        ).fetch_all(&self.pool)
+        .await?;
+        
+        Ok(questions)
+    }
+
+    pub async fn get_dsa_questions_by_id(&self, question_ids: Vec<Uuid>) -> anyhow::Result<Vec<QuestionWithoutAnswer>> {
+        let questions = sqlx::query_as!(
+            QuestionWithoutAnswer,
+            r#"
+                SELECT 
+                    id,
+                    question_type AS "question_type: QuestionType",
+                    title,
+                    description,
+                    time_limit,
+                    points,
+                    NULL::text[] AS options,
+                    testcase_input,
+                    testcase_output
+                FROM DSA_QUESTIONS WHERE
                    id = ANY($1)     
             "#,
             &question_ids
@@ -170,7 +264,7 @@ impl Database {
                 SELECT 
                     correct_option,
                     points
-                FROM QUESTIONS WHERE
+                FROM MCQ_QUESTIONS WHERE
                    id = $1  
             "#,
             question_id
@@ -180,22 +274,18 @@ impl Database {
         Ok((record.correct_option, record.points))
     }
 
-    pub async fn get_all_examiner_questions(&self, examiner_id: Uuid) -> anyhow::Result<Vec<Question>> {
+    pub async fn get_all_examiner_mcq_questions(&self, examiner_id: Uuid) -> anyhow::Result<Vec<Question>> {
         let questions = sqlx::query_as!(
             Question,
             r#"
                 SELECT 
                     id,
                     question_type AS "question_type: QuestionType",
-                    title,
-                    description,
-                    options,
-                    correct_option,
-                    time_limit,
-                    points,
                     owner_id,
                     created_at
                 FROM QUESTIONS WHERE
+                    question_type = 'Mcq'
+                AND    
                    owner_id = $1     
             "#,
             examiner_id
@@ -203,6 +293,28 @@ impl Database {
         .await?;
         
         Ok(questions)
+    }
+
+    pub async fn get_all_dsa_questions(&self) -> anyhow::Result<Vec<QuestionWithoutAnswer>> {
+        let dsa_questions = sqlx::query_as!(
+            QuestionWithoutAnswer,
+            r#"
+                SELECT 
+                    id,
+                    question_type AS "question_type: QuestionType",
+                    title,
+                    description,
+                    time_limit,
+                    points,
+                    NULL::text[] AS options,
+                    testcase_input,
+                    testcase_output
+                FROM DSA_QUESTIONS
+            "#,
+        ).fetch_all(&self.pool)
+        .await?;
+        
+        Ok(dsa_questions)
     }
 
     //contest
@@ -485,4 +597,123 @@ impl Database {
         Ok(())
     }
 
+
+    //boilerplate code
+    pub async fn create_bulk_boilerplate_code(&self, args: CreateBulkBoilerPlateCodeArgs) -> anyhow::Result<()> { 
+        let mut txn = self.pool.begin().await?;
+        
+        sqlx::query!(
+            r#"
+                INSERT INTO BOILERPLATE_CODES (
+                    problem_id,  
+                    language_id, 
+                    partial_code,
+                    full_code
+                )
+                SELECT 
+                    $1,
+                    language_id,
+                    partial_code,
+                    full_code
+                FROM UNNEST (
+                    $2::int2[],
+                    $3::text[],
+                    $4::text[]
+                ) AS t (language_id, partial_code, full_code)
+            "#,
+            args.problem_id,
+            &args.language_ids,
+            &args.partial_codes,
+            &args.full_codes
+        )
+        .execute(&mut *txn)
+        .await?;
+
+        txn.commit().await?;
+
+        Ok(())
+    
+    }
+
+    pub async fn get_all_boilerplate_codes(&self, question_id: Uuid) -> anyhow::Result<Vec<BoilerplateCode>> { 
+        let boilerplate_codes =  sqlx::query_as!(
+            BoilerplateCode,
+            r#"
+                SELECT
+                    id,
+                    problem_id,  
+                    language_id, 
+                    partial_code,
+                    full_code,
+                    created_at
+                FROM BOILERPLATE_CODES 
+                WHERE
+                    problem_id = $1
+            "#,
+            question_id
+        )
+        .fetch_all(&self.pool)
+        .await?;
+
+        Ok(boilerplate_codes)
+    }
+
+
+
+    //test cases
+    pub async fn create_bulk_testcases(&self, args: CreateBulkTestCasesArgs) -> anyhow::Result<()> { 
+        let mut txn = self.pool.begin().await?;
+        
+        sqlx::query!(
+            r#"
+                INSERT INTO TEST_CASES (
+                    problem_id,  
+                    input, 
+                    output
+                )
+                SELECT 
+                    $1,
+                    input,
+                    output
+                FROM UNNEST (
+                    $2::text[],
+                    $3::text[]
+                ) AS t (input, output)
+            "#,
+            args.problem_id,
+            &args.inputs,
+            &args.outputs
+        )
+        .execute(&mut *txn)
+        .await?;
+
+        txn.commit().await?;
+
+        Ok(())
+    
+    }
+
+
+    //submission
+    pub async fn create_dsa_submission(&self, args: CreateDsaSubmissionArgs) -> anyhow::Result<()> {    
+        sqlx::query!(
+            r#"
+                INSERT INTO SUBMISSIONS (
+                    problem_id,  
+                    contest_id, 
+                    user_id,
+                    status
+                )
+                VALUES ($1, $2, $3, $4)
+            "#,
+            args.problem_id,
+            args.contest_id,
+            args.user_id,
+            args.status
+        )
+        .execute(&self.pool)
+        .await?;
+        
+        Ok(())
+    }
 }

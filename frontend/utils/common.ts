@@ -22,3 +22,9 @@ export function convertEpochToIsoFormat(seconds: number) {
 
     return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 }
+
+export const languageIdToNameMap = new Map<number, string>([
+  [54, 'cpp'],
+  [63, 'javascript'],
+  [73, 'rust']
+]);
