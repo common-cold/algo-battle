@@ -110,15 +110,15 @@ function QuestionRow({question, onImport}: QuestionInfoProps) {
     }
 
    return <div className="flex justify-between contestRow text-[18px] px-5 py-3 hover:!bg-[#1F2433]">
-        <div className="textColor">
+        <div className="textColor max-w-1/2">
             {question.title}
         </div>
-        <div className="flex justify-between gap-5">
+        <div className="flex justify-between gap-5 h-7 max-h-7">
             <div className="textBgStyle6 px-3 rounded-[10px]">
                 {convertSecondsToHumanReadable(question.time_limit)}
             </div>
             <div className="textBgStyle4 px-3 rounded-[10px]">
-                {question.points} Points
+                {question.points / 100} Points
             </div>
             <div onClick={() => onClick()}
                 className="button2 px-3 font-medium">

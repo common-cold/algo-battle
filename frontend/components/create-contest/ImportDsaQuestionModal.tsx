@@ -116,7 +116,7 @@ function DsaQuestionRow({question, onImport}: DsaQuestionInfoProps) {
                     {convertSecondsToHumanReadable(question.time_limit)}
                 </div>
                 <div className="textBgStyle4 px-3 rounded-[10px]">
-                    {question.points} Points
+                    {question.points / 100} Points
                 </div>
                 <div onClick={() => onClick()}
                     className="button2 px-3 font-medium">

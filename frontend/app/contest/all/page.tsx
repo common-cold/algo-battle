@@ -39,7 +39,6 @@ export default function AllContest() {
             } else {
                 const contests = response.data as Array<Contest>;
                 if (contests.length == 0) {
-                    showErrorToast("You have not saved any contests yet!");
                 } else if (status == "Scheduled" || status == "Active") {
                     setUpcomingContests(prev => [...prev, ...contests]);
                 } else if (status == "Closed") {

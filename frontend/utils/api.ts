@@ -1,4 +1,4 @@
-import { API_BASE_URL, CreateContestArgs, CreateQuestionArgs, GetContestsArgs, GetQuestionArgs, GetQuestionsByIdArgs, SignInArgs, SignupArgs, SubmitQuestionArgs } from "@/types/routes";
+import { API_BASE_URL, CreateContestArgs, CreateQuestionArgs, FetchAttemptIdArgs, GetContestsArgs, GetQuestionArgs, GetQuestionsByIdArgs, SignInArgs, SignupArgs, EvaluateDsaQuestionArgs, SubmitQuestionArgs, SubmitDsaQuestionArgs } from "@/types/routes";
 import axios from "axios";
 
 
@@ -186,6 +186,38 @@ export async function submitMcqQuestion(body: SubmitQuestionArgs) {
     }
 }
 
+export async function submitDsaQuestion(body: SubmitDsaQuestionArgs) {
+    try {
+        let token = localStorage.getItem("token");
+        const response = await axios.post(API_BASE_URL + `/question/submit/dsa`, body, {
+            headers: {
+                Authorization: token
+            },
+            validateStatus: () => true
+        });
+
+    return response;
+    } catch (e) {
+        return null;
+    }
+}
+
+export async function evaluateDsaQuestion(body: EvaluateDsaQuestionArgs) {
+    try {
+        let token = localStorage.getItem("token");
+        const response = await axios.post(API_BASE_URL + `/question/evaluate/dsa`, body, {
+            headers: {
+                Authorization: token
+            },
+            validateStatus: () => true
+        });
+
+    return response;
+    } catch (e) {
+        return null;
+    }
+}
+
 export async function getAllBoilerplateCodes(questionId: string) {
     try {
         const response = await axios.get(API_BASE_URL + `/boilerplate/${questionId}`, {
@@ -193,6 +225,64 @@ export async function getAllBoilerplateCodes(questionId: string) {
         });
 
     return response;
+    } catch (e) {
+        return null;
+    }
+}
+
+export async function getJudge0SubmissionStatus(attemptId: string) {
+    try {
+        const response = await axios.get(API_BASE_URL + `/judge0-submission/status/${attemptId}`, {
+            validateStatus: () => true
+        });
+
+    return response;
+    } catch (e) {
+        return null;
+    }
+}
+
+export async function getActiveAttemptId(body: FetchAttemptIdArgs) {
+    try {
+        let token = localStorage.getItem("token");
+        const response = await axios.post(API_BASE_URL + `/judge0-submission/fetch/active/attemptId`, body, {
+            headers: {
+                Authorization: token
+            },
+            validateStatus: () => true
+        });
+
+    return response;
+    } catch (e) {
+        return null;
+    }
+}
+
+export async function getSubmission(contestId: string, questionId: string) {
+    try {
+        let token = localStorage.getItem("token");
+        let response = await axios.get(API_BASE_URL + '/submission', {
+            params: {
+                contestId: contestId,
+                questionId: questionId
+            },
+            headers: {
+                Authorization: token
+            },
+            validateStatus: () => true
+        });
+        return response;
+    } catch (e) {
+        return null;
+    }
+}
+
+export async function getLeaderboard(contestId: string) {
+    try {
+        let response = await axios.get(`${API_BASE_URL}/leaderboard/${contestId}`, {
+            validateStatus: () => true
+        });
+        return response;
     } catch (e) {
         return null;
     }

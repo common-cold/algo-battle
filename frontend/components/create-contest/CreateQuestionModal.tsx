@@ -54,7 +54,7 @@ export default function CreateQuestionModal({onClose}: NewQuestionModalProps) {
             options: questionData.options,
             correct_option: questionData.correctIndex,
             time_limit: timeLimitInSeconds,
-            points: points
+            points: points * 100
         });
 
         if (!response) {
@@ -172,7 +172,7 @@ export default function CreateQuestionModal({onClose}: NewQuestionModalProps) {
                                 name="selectedType" defaultValue="5">
                                 <option value="5">5</option>
                                 <option value="10">10</option>
-                                <option value="15">10</option>
+                                <option value="15">15</option>
                                 <option value="20">20</option>
                                 <option value="25">25</option>
                                 <option value="30">30</option>

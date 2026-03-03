@@ -21,7 +21,8 @@ pub struct LocalContest {
     pub end_date: i64,
     pub question_ids: Vec<Uuid>,
     pub question_times: Vec<i64>,
-    pub current_question_id: Option<Uuid>
+    pub current_question_id: Option<Uuid>,
+    pub current_question_time_left: Option<i64>
 }
 
 #[derive(Debug, Clone)]
@@ -43,8 +44,6 @@ impl ContestManager {
             .iter()
             .map(|q| q.time_limit )
             .collect::<Vec<i64>>();
-            
-            println!("Q times: {:?}", question_times);
 
             let user_ids_joined = db.get_contest_user_ids(contest.id).await?;
             let users: HashSet<Uuid> = user_ids_joined.into_iter().collect();
@@ -55,7 +54,8 @@ impl ContestManager {
                 end_date: contest.end_date,
                 question_ids: question_ids,
                 question_times: question_times,
-                current_question_id: None          //after syncing the broadcast_next_question_task runs immediately which updates this
+                current_question_id: None,         //after syncing the broadcast_next_question_task runs immediately which updates this
+                current_question_time_left: None   //same as above
             };
 
             contests.insert(contest.id, local_contest);
@@ -82,6 +82,7 @@ impl ContestManager {
             .collect::<Vec<i64>>();
 
         let first_question_id = question_ids[0];
+        let first_question_time = question_times[0];
         
         let local_contest= LocalContest {
             users: HashSet::new(),
@@ -89,7 +90,8 @@ impl ContestManager {
             end_date: full_contest.contest.end_date,
             question_ids: question_ids,
             question_times: question_times,
-            current_question_id: Some(first_question_id)
+            current_question_id: Some(first_question_id),
+            current_question_time_left: Some(first_question_time)
         };
 
         self.contests.insert(full_contest.contest.id, local_contest);
@@ -107,7 +109,8 @@ impl ContestManager {
                     data: common::ResponseData::NextQuestion(NextQuestionArgs {
                         question_id: contest.current_question_id.unwrap(),
                         contest_id: contest_id,
-                        new_rank: -1
+                        new_rank: -1,
+                        question_time_left: contest.current_question_time_left.unwrap()
                     })
                 };
 
@@ -124,7 +127,7 @@ impl ContestManager {
         Ok(())
     }
 
-    pub fn determine_next_question_index(&self, contest_id: &Uuid) -> anyhow::Result<i16> {
+    pub fn determine_next_question_index(&self, contest_id: &Uuid) -> anyhow::Result<(i16, i64)> {
         let local_contest = self.contests.get(contest_id).unwrap();
 
         let now = Utc::now().timestamp();
@@ -136,11 +139,12 @@ impl ContestManager {
 
         for (index, &question_time) in local_contest.question_times.iter().enumerate() {
             if time_passed < question_time {
-                return Ok(index as i16);
+                let time_left = question_time - time_passed;
+                return Ok((index as i16, time_left));
             } 
             time_passed = time_passed - question_time;
         }
 
-        Ok(-1)
+        Ok((-1, -1))
     }
 }

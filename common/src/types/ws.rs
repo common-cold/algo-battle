@@ -4,7 +4,6 @@ use uuid::Uuid;
 use crate::FullContest;
 
 
-
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum WebSocketMessage {
     StartContest(FullContest),
@@ -44,7 +43,8 @@ pub struct LogArgs {
 pub struct NextQuestionArgs {
     pub question_id: Uuid,
     pub contest_id: Uuid,
-    pub new_rank: i32
+    pub new_rank: i32,
+    pub question_time_left: i64
 }
 
 #[derive(Debug, Serialize, Deserialize)]

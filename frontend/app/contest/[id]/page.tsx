@@ -3,13 +3,14 @@
 import { ContestEndModal } from "@/components/contest-page/ContestEndModal";
 import DsaQuestionScreen from "@/components/contest-page/DsaQuestionScreen";
 import McqQuestionScreen from "@/components/contest-page/McqQuestionScreen";
+import { PostQuestionSubmitModal } from "@/components/contest-page/PostQuestionSubmitModal";
 import QuestionSidebar from "@/components/contest-page/QuestionSidebar";
 import { showErrorToast } from "@/components/ContestInfo";
-import { connectWsAtom, contestEndDateAtom, contestJoinedAtAtom, contestSecondsAtom, currentContestIdAtom, currentQuestionIdAtom, currentRankAtom, isContestOverAtom, isWsOpenAtom, userAtom, wsAtom } from "@/store/atom";
+import { connectWsAtom, contestEndDateAtom, contestJoinedAtAtom, contestSecondsAtom, currentContestIdAtom, currentQuestionIdAtom, currentQuestionTimeLeftAtom, currentRankAtom, isContestOverAtom, isWsOpenAtom, showPostQuestionSubmitModalAtom, userAtom, wsAtom } from "@/store/atom";
 import { Question } from "@/types/db";
-import { FullContest } from "@/types/routes";
+import { FullContest, GetSubmissionResponse } from "@/types/routes";
 import { WebSocketMessage } from "@/types/ws";
-import { getContestJoinedAt, getFullContest } from "@/utils/api";
+import { getContestJoinedAt, getFullContest, getSubmission } from "@/utils/api";
 import { convertEpochToIsoFormat } from "@/utils/common";
 import { useAtom, useAtomValue } from "jotai";
 import { useRouter } from "next/navigation";
@@ -31,9 +32,11 @@ export default function ContestPage({params} : {
     const [_, connectWs] = useAtom(connectWsAtom);
     const user = useAtomValue(userAtom);
     const currentQuestionId = useAtomValue(currentQuestionIdAtom);
+    const [currentQuestionTimeLeft, setCurrentQuestionTimeLeft] = useAtom(currentQuestionTimeLeftAtom);
     const isContestOver = useAtomValue(isContestOverAtom);
     const currentRank = useAtomValue(currentRankAtom);
     const [showContestOverModal, setShowContestOverModal] = useState(false);
+    const [showPostQuestionSubmitModal, setShowPostQuestionSubmitModal] = useAtom(showPostQuestionSubmitModalAtom)
     const [fullContest, setFullContest] = useState<FullContest | null>(null);
     const [currQuestion, setCurrQuestion] = useState<Question | null>(null);
     const [error, setError] = useState<string | null>(null);
@@ -80,6 +83,7 @@ export default function ContestPage({params} : {
         async function init() {
             let error = await fetchContestJoinedAt();
             if (error) {
+                console.log("Error: " + error);
                 setError("You have not joined this contest");
                 return;
             }
@@ -124,14 +128,47 @@ export default function ContestPage({params} : {
     }, [ws, isWsOpen]);
 
     useEffect(() => {
-        if (currentQuestionId != null && fullContest != null) {
-            let currQuestion = fullContest.questions.filter(q => q.id === currentQuestionId)[0];
-            setCurrQuestion(currQuestion);
+        if (fullContest == null || currentQuestionId == null) {
+            return;
         }
+
+        async function fetchCurrentQuestionSubmissionIfAny() {
+            const response = await getSubmission(id, currentQuestionId!);
+            if (!response || response.status != 200) {
+                showErrorToast("Error in fetching current submission");
+                throw new Error("Error in fetching current submission");
+            } else {
+                const data = response.data as GetSubmissionResponse;
+                if (data.found) {
+                    setShowPostQuestionSubmitModal(true);
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+        }
+
+        async function process() {
+            let alreadySubmitted;
+            try {
+                alreadySubmitted = await fetchCurrentQuestionSubmissionIfAny();
+            } catch (e) {
+                setError("Error in fetching current submission");
+                return;
+            }
+            if (!alreadySubmitted) {
+                let currQuestion = fullContest!.questions.filter(q => q.id === currentQuestionId!)[0];
+                setCurrQuestion(currQuestion);
+                setShowPostQuestionSubmitModal(false);
+            }
+        }
+        
+        process();
+
     }, [currentQuestionId, fullContest])
 
     useEffect(() => {
-        const interval = setInterval(() => setContestSeconds(prev => prev! + 1), 1000);
+        let interval = setInterval(() => setCurrentQuestionTimeLeft(prev => prev! - 1), 1000);
         setCurrentContestId(id);
 
         return () => {
@@ -163,6 +200,12 @@ export default function ContestPage({params} : {
         </div>
     }
 
+    if (showPostQuestionSubmitModal) {
+        return <div>
+            <PostQuestionSubmitModal/>
+        </div>
+    }
+
     return <div className="flex-1 h-screen min-h-0 py-5 px-10">
         <div className="flex flex-1 h-full min-h-0 justify-between gap-10">
             <QuestionSidebar questions={fullContest.questions as Question[]} />
@@ -170,10 +213,10 @@ export default function ContestPage({params} : {
                 <div className="flex justify-between gap-80">
                     <div className="flex justify-centre gap-5">
                         <div className="textBgStyle2 px-3 py-2 rounded-[10px]">
-                            {`Time Left: ${convertEpochToIsoFormat(contestEndDate! - contestSeconds!)}`}
+                            {`Time Left: ${convertEpochToIsoFormat(currentQuestionTimeLeft!)}`}
                         </div>
                         <div className="textBgStyle4 px-3 py-2 rounded-[10px]">
-                            {currentRank}
+                            {currentRank == -1 ? "Rank: NA" : `Rank: ${currentRank}`}
                         </div>
                     </div>
                 </div>

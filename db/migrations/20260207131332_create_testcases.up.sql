@@ -2,7 +2,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 CREATE TABLE TEST_CASES (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    problem_id UUID REFERENCES dsa_questions(id) ON DELETE CASCADE,
+    problem_id UUID NOT NULL REFERENCES dsa_questions(id) ON DELETE CASCADE,
     input TEXT NOT NULL,
     output TEXT NOT NULL,
     created_at BIGINT NOT NULL DEFAULT EXTRACT(EPOCH FROM NOW())

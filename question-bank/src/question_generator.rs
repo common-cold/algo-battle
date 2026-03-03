@@ -137,7 +137,7 @@ impl QuestionGenerator {
         let mut testcase_input: Option<String> = None;
         let mut testcase_output: Option<String> = None;
         let mut time_limit: Option<i64> = None;
-        let mut points: Option<i16> = None;
+        let mut points: Option<i32> = None;
 
         let mut is_description_text = false;
         let mut is_testcase_input = false;
@@ -190,9 +190,9 @@ impl QuestionGenerator {
                     .nth(1).expect("Points is empty")
                     .trim()
                     .trim_matches('"')
-                    .parse::<i16>()?;
+                    .parse::<i32>()?;
 
-                points = Some(value);
+                points = Some(value * 100);
             } else if is_description_text {
                 let value = line.trim()
                     .trim_matches('"').to_string();
@@ -402,12 +402,11 @@ impl QuestionGenerator {
         let field_type = tup.1;
         let mapped_type = CPP_TYPES.get(field_type.as_str()).unwrap();
 
-        let tmp_code = format!(
+        let mut tmp_code = format!(
             indoc! {
                 "
                 {mapped_type} {field_name};
                 {field_name} = {function_name}({input_args});
-                cout<<{field_name};
                 "
             }
             ,
@@ -416,6 +415,31 @@ impl QuestionGenerator {
             function_name = self.function_name,
             input_args = input_args.join(", ")
         );
+
+        if mapped_type.starts_with("vector") {
+            let print_statement = format!(
+                indoc! {
+                    "
+                    for (int i = 0; i < {field_name}.size(); i++) {{
+                        if (i > 0) cout << \" \";
+                        cout << {field_name}[i];
+                    }}
+                    "
+                },
+                field_name = field_name
+            );   
+            tmp_code.push_str(&print_statement);
+        } else {
+            let print_statement = format!(
+                indoc! {
+                    "
+                    cout<<{field_name};
+                    "
+                },
+                field_name = field_name
+            );
+            tmp_code.push_str(&print_statement);   
+        };
 
         code.push_str(&tmp_code);
 
@@ -583,14 +607,16 @@ impl QuestionGenerator {
             code.push_str(&tmp_code.unwrap());
         }
 
-        let field_name = self.output_fields[0].clone().0;
+        let tup = self.output_fields[0].clone();
+        let field_name = tup.0;
+        let field_type = tup.1;
+        let _mapped_type = JS_TYPES.get(field_type.as_str()).unwrap();
 
-        let tmp_code = format!(
+        let mut tmp_code = format!(
             indoc! {
                 "
                 let {field_name};
                 {field_name} = {function_name}({input_args});
-                console.log({field_name});
                 "
             }
             ,
@@ -598,6 +624,28 @@ impl QuestionGenerator {
             function_name = self.function_name,
             input_args = input_args.join(", ")
         );
+
+         if field_type.starts_with("list") {
+            let print_statement = format!(
+                indoc! {
+                    "
+                    console.log({field_name}.join(\" \"));
+                    "
+                },
+                field_name = field_name
+            );   
+            tmp_code.push_str(&print_statement);
+        } else {
+            let print_statement = format!(
+                indoc! {
+                    "
+                    console.log({field_name});
+                    "
+                },
+                field_name = field_name
+            );
+            tmp_code.push_str(&print_statement);   
+        };
 
         code.push_str(&tmp_code);
 
@@ -701,7 +749,7 @@ impl QuestionGenerator {
                             "
                             let size_arr{index}: usize = it.next().unwrap().parse().unwrap();
                             
-                            let {field_name}:{mapped_type} = Vec::new();
+                            let mut {field_name}:{mapped_type} = Vec::new();
                             for i in 0..size_arr{index} {{
                                 {field_name}.push(it.next().unwrap().parse::<i32>().unwrap());
                             }}
@@ -755,12 +803,11 @@ impl QuestionGenerator {
         let field_type = tup.1;
         let mapped_type = RUST_TYPES.get(field_type.as_str()).unwrap();
 
-        let tmp_code = format!(
+        let mut tmp_code = format!(
             indoc! {
                 "
-                let {field_name}: {mapped_type} ;
+                let {field_name}: {mapped_type};
                 {field_name} = {function_name}({input_args});
-                println!(\"{{}}\", {field_name});
                 "
             }
             ,
@@ -769,6 +816,33 @@ impl QuestionGenerator {
             function_name = self.function_name,
             input_args = input_args.join(", ")
         );
+
+        if mapped_type.starts_with("Vec") {
+            let print_statement = format!(
+                indoc! {
+                    "
+                    let output = {field_name}
+                    .iter()
+                    .map(|x| x.to_string())
+                    .collect::<Vec<String>>()
+                    .join(\" \");
+                    println!(\"{{}}\", output);
+                    "
+                },
+                field_name = field_name
+            );   
+            tmp_code.push_str(&print_statement);
+        } else {
+            let print_statement = format!(
+                indoc! {
+                    "
+                    println!(\"{{}}\", {field_name});
+                    "
+                },
+                field_name = field_name
+            );
+            tmp_code.push_str(&print_statement);   
+        };
 
         code.push_str(&tmp_code);
 

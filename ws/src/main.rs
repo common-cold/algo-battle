@@ -1,6 +1,6 @@
-use std::{str::FromStr, sync::{Arc, Mutex}};
+use std::{sync::{Arc, Mutex}};
 
-use actix_web::{App, HttpRequest, HttpResponse, HttpServer, Result, body::MessageBody, get, rt, web::{Data, Payload}};
+use actix_web::{App, HttpRequest, HttpResponse, HttpServer, Result, get, rt, web::{Data, Payload}};
 use actix_ws::{Message, handle};
 use common::{Role, WebSocketMessage, WebsocketAuth};
 use db::Database;
@@ -32,14 +32,14 @@ pub async fn ws_handler(request: HttpRequest, body: Payload, state: Data<WsData>
     let leaderboard_service = state.leaderboard_service.clone();
 
     let mut user_id: Option<Uuid> = None;
-    let mut username: Option<String> = None;
-    let mut role: Option<Role> = None;
+    let mut _username: Option<String> = None;
+    let mut _role: Option<Role> = None;
 
     match ws_auth {
         WebsocketAuth::User(ref jwt_claims) => {
             user_id = Some(jwt_claims.id);
-            username = Some(jwt_claims.username.clone());
-            role = Some(jwt_claims.role);
+            _username = Some(jwt_claims.username.clone());
+            _role = Some(jwt_claims.role);
 
             contest_manager.lock()
             .unwrap()

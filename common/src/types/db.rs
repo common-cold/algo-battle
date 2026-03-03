@@ -54,7 +54,7 @@ pub struct McqQuestion {
     pub options: Vec<String>,
     pub correct_option: i16,
     pub time_limit: i64,
-    pub points: i16
+    pub points: i32
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -64,7 +64,7 @@ pub struct DsaQuestion {
     pub title: String,
     pub description: String,
     pub time_limit: i64,
-    pub points: i16,
+    pub points: i32,
     pub testcase_input: String,
     pub testcase_output: String
 }
@@ -82,12 +82,12 @@ pub struct Contest {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct Leaderboard {
+pub struct LeaderboardRow {
     pub contest_id: Uuid,
     pub user_id: Uuid,
-    pub score: i16,
-    pub rank: i16,
-    pub created_at: i64
+    pub score: i32,
+    pub rank: i32,
+    pub name: String
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -110,11 +110,25 @@ pub struct TestCase {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct Submission {
+pub struct Judge0Submission {
     pub id: Uuid,
+    pub attempt_id: String,
+    pub submission_id: String,
     pub problem_id: Uuid,
     pub contest_id: Uuid,
+    pub testcase_id: Uuid,
     pub user_id: Uuid,
     pub status: String,
+    pub compile_result: Option<String>,
+    pub created_at: i64,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct Submission {
+    pub id: Uuid,
+    pub contest_id: Uuid,
+    pub question_id: Uuid,
+    pub user_id: Uuid,
+    pub points_earned: i32,
     pub created_at: i64,
 }

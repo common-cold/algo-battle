@@ -1,4 +1,4 @@
-import { contestEndDateAtom, contestJoinedAtAtom, contestSecondsAtom, currentContestIdAtom, currentRankAtom } from "@/store/atom";
+import { contestEndDateAtom, contestJoinedAtAtom, contestSecondsAtom, currentContestIdAtom, currentRankAtom, showPostQuestionSubmitModalAtom } from "@/store/atom";
 import { Question } from "@/types/db"
 import { convertEpochToIsoFormat } from "@/utils/common";
 import { useAtom, useAtomValue } from "jotai";
@@ -18,8 +18,14 @@ type OptionProps = {
 export default function McqQuestionScreen({question}: QuestionScreenProps) {
     const currentContestId = useAtomValue(currentContestIdAtom);
     const [selectedOption, setSelectedOption] = useState<number | null>(null);
+    const [disableSubmit, setDisableSubmit] = useState(false);
+    const [showPostQuestionSubmitModal, setShowPostQuestionSubmitModal] = useAtom(showPostQuestionSubmitModalAtom);
 
     async function handleMcqSubmit() {
+        if (disableSubmit) {
+            return;
+        }
+
         if (selectedOption == null) {
             showErrorToast("Select an option");
             return;
@@ -28,6 +34,8 @@ export default function McqQuestionScreen({question}: QuestionScreenProps) {
         if (!question || !currentContestId) {
             return;
         }
+
+        setDisableSubmit(true);
 
         const response = await submitMcqQuestion({
             contest_id: currentContestId,
@@ -42,6 +50,8 @@ export default function McqQuestionScreen({question}: QuestionScreenProps) {
             showErrorToast(data.error);
         } else {
             showSuccessToast("Question submitted successfully");
+            setDisableSubmit(false);
+            setShowPostQuestionSubmitModal(true);
         }
     }
 
@@ -82,7 +92,7 @@ export default function McqQuestionScreen({question}: QuestionScreenProps) {
         </div>   
 
         <div onClick={() => {handleMcqSubmit()}}
-            className="textBgStyle5 px-3 py-2 rounded-[10px]">
+            className={`button4WithoutPointer px-3 py-2 font-bold ${disableSubmit ? "cursor-not-allowed opacity-50": "cursor-pointer"}`}>
             Submit
         </div>
     </div>

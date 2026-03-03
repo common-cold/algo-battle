@@ -20,7 +20,8 @@
     "react-bootstrap-icons": "^1.11.6",
     "react-datepicker": "^9.1.0",
     "react-dom": "19.2.3",
-    "react-hot-toast": "^2.6.0"
+    "react-hot-toast": "^2.6.0",
+    "react-resizable-panels": "^4.6.4"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

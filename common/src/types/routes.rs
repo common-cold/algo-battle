@@ -25,7 +25,7 @@ pub struct CreateMcqQuestionArgs {
     pub options: Vec<String>,
     pub correct_option: i16,
     pub time_limit: i64,
-    pub points: i16,
+    pub points: i32,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -63,7 +63,7 @@ pub struct QuestionWithoutAnswer {
     pub description: String,
     pub options: Option<Vec<String>>,
     pub time_limit: i64,
-    pub points: i16,
+    pub points: i32,
     pub testcase_input: Option<String>,
     pub testcase_output: Option<String>
 }
@@ -90,6 +90,22 @@ pub struct SubmitQuestionArgs {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SubmitDsaQuestionArgs {
+    pub contest_id: Uuid,
+    pub question_id: Uuid,
+    pub attempt_id: String
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct EvaluateDsaQuestionArgs {
+    pub contest_id: Uuid,
+    pub question_id: Uuid,
+    pub attempt_id: String,
+    pub code: String,
+    pub language_id: i16
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UpdateContestArgs {
     pub title: Option<String>,
     pub description: Option<String>,
@@ -103,7 +119,7 @@ pub struct CreateDsaQuestionArgs {
     pub title: String,
     pub description: String,
     pub time_limit: i64,
-    pub points: i16,
+    pub points: i32,
     pub testcase_input: String,
     pub testcase_output: String
 }
@@ -125,8 +141,87 @@ pub struct CreateBulkTestCasesArgs {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CreateDsaSubmissionArgs {
+    pub attempt_id: String,
+    pub submission_id: String,
     pub problem_id: Uuid,
     pub contest_id: Uuid,
+    pub testcase_id: Uuid,
     pub user_id: Uuid,
     pub status: String, 
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CreateSubmissionArgs {
+    pub contest_id: Uuid,
+    pub question_id: Uuid,
+    pub user_id: Uuid,
+    pub points_earned: i32
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Judge0SubmissionDto {
+    pub source_code: String,
+    pub language_id: i16,
+    pub stdin: String,
+    pub expected_output:String,
+    pub callback_url: String
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Judge0BatchSubmissionDto {
+    pub submissions: Vec<Judge0SubmissionDto>
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Judge0SubmissionResponseDto {
+    pub token: String
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Judge0SubmissionCallBackArgs {
+  pub stdout: Option<String>,
+  pub time: Option<String>,
+  pub memory: Option<i64>,
+  pub stderr: Option<String>,
+  pub token: String,
+  pub compile_output: Option<String>,
+  pub message: Option<String>,
+  pub status: Judge0StatusDto
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Judge0StatusDto {
+    pub id: i16,
+    pub description: String
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CompactTestcase {
+    pub input: String,
+    pub output: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SubmissionStatusResponse {
+    pub total_testcases: i16,
+    pub pending: i16,
+    pub failed: i16,
+    pub passed: i16,
+    pub failed_testcase: Option<CompactTestcase>,
+    pub compile_result: Option<String>
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct FetchAttemptIdArgs {
+    pub contest_id: Uuid,
+    pub problem_id: Uuid
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GetSubmissionParams {
+    #[serde(rename="contestId")]
+    pub contest_id: Uuid,
+
+    #[serde(rename="questionId")]
+    pub question_id: Uuid
 }

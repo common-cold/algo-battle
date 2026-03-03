@@ -1,4 +1,4 @@
-import { Contest, ContestStatus, Question, QuestionType, Role } from "./db"
+import { Contest, ContestStatus, Question, QuestionType, Role, Submission } from "./db"
 
 export const API_BASE_URL = 'http://localhost:8080';
 export const WS_BASE_URL = 'http://localhost:8081';
@@ -57,4 +57,47 @@ export interface SubmitQuestionArgs {
     contest_id: string,
     question_id: string,
     selected_option: number
+}
+
+export interface SubmitDsaQuestionArgs {
+    contest_id: string,
+    question_id: string,
+    attempt_id: string
+}
+
+export interface EvaluateDsaQuestionArgs {
+    contest_id: string,
+    question_id: string,
+    attempt_id: string
+    code: string,
+    language_id: number
+}
+
+export interface CompactTestcase {
+    input: string,
+    output: string,
+}
+
+export interface SubmissionStatusResponse {
+    total_testcases: number,
+    pending: number,
+    failed: number,
+    passed: number,
+    failed_testcase?: CompactTestcase,
+    compile_result?: string
+}
+
+export interface FetchAttemptIdArgs {
+    contest_id: string,
+    problem_id: string
+}    
+
+export interface FetchAttemptResponse {
+    attempt_id?: string,
+    found: boolean 
+}
+
+export interface GetSubmissionResponse {
+    found: boolean,
+    submission?: Submission
 }

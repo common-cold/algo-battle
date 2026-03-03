@@ -6,7 +6,7 @@ CREATE TABLE DSA_QUESTIONS (
     title TEXT NOT NULL,
     description TEXT NOT NULL,
     time_limit BIGINT NOT NULL,
-    points SMALLINT NOT NULL,
+    points INTEGER NOT NULL,
     testcase_input TEXT NOT NULL,
     testcase_output TEXT NOT NULL
 )

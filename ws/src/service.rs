@@ -27,13 +27,14 @@ pub async fn broadcast_next_question_task(db: &Database, contest_manager: Arc<Mu
         let mut contest_ids_to_remove = Vec::<Uuid>::new();
 
         for (id, contest) in cm.contests.iter() {
-            let index_result = cm.determine_next_question_index(id);
-            if let Err(e) = index_result {
+            let next_question_result = cm.determine_next_question_index(id);
+            if let Err(e) = next_question_result {
                 println!("{}", e.to_string());
                 continue;
             }
 
-            let index = index_result.unwrap();
+            let (index, question_time_left)  = next_question_result.unwrap();
+            
             if index == -1 {
                 contest_ids_to_remove.push(*id);
             } else {
@@ -43,10 +44,11 @@ pub async fn broadcast_next_question_task(db: &Database, contest_manager: Arc<Mu
                 if contest_opt.is_some() {
                     let contest = contest_opt.unwrap();
                     contest.current_question_id = Some(contest.question_ids[index as usize]);
+                    contest.current_question_time_left = Some(question_time_left);
                 }
             }
 
-
+            //broadcast next question updates to users
             for user_id in contest.users.iter() {
                 let user_opt = cm.clients.get(user_id);
                 if user_opt.is_none() {
@@ -83,7 +85,8 @@ pub async fn broadcast_next_question_task(db: &Database, contest_manager: Arc<Mu
                         data: common::ResponseData::NextQuestion(NextQuestionArgs {
                             question_id: contest.question_ids[index as usize],
                             contest_id: *id,
-                            new_rank: rank
+                            new_rank: rank,
+                            question_time_left: question_time_left
                         })
                     };
                     let message_string = serde_json::to_string(&message);

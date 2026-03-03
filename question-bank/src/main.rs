@@ -20,7 +20,7 @@ enum Commands {
 
 #[tokio::main]
 async fn main() {
-    //cargo run questions/<folder-name>
+    //cargo run questions/<folder-name> <create-question | upload-question>
 
     let cli = Cli::parse();
     let path = cli.path;

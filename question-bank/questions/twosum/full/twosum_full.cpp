@@ -11,7 +11,10 @@ int target;
 cin>>target;
 vector<int> result;
 result = twoSum(arr, target);
-cout<<result;
+for (int i = 0; i < result.size(); i++) {
+    if (i > 0) cout << " ";
+    cout << result[i];
+}
 
 
     return 0;

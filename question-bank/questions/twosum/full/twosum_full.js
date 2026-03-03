@@ -6,5 +6,5 @@ let arr = input.splice(0, size_arr0).map(num => parseInt(num));
 let target = parseInt(input.shift());
 let result;
 result = twoSum(arr, target);
-console.log(result);
+console.log(result.join(" "));
 

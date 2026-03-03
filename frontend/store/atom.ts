@@ -60,6 +60,7 @@ export const connectWsAtom = atom(null, (get, set) => {
                 console.log(JSON.stringify(response.payload));
                 set(currentQuestionIdAtom, args.question_id);
                 set(currentRankAtom, args.new_rank);
+                set(currentQuestionTimeLeftAtom, args.question_time_left);
                 break;
 
             case 'EndContest':
@@ -78,7 +79,10 @@ export const connectWsAtom = atom(null, (get, set) => {
 });
 
 export const currentQuestionIdAtom = atom<string | null>(null);
+export const currentQuestionTimeLeftAtom = atom<number | null>(null);
 export const isContestOverAtom = atom<boolean>(false);
 export const currentRankAtom = atom<number | null>(null);
 export const currentContestIdAtom = atom<string | null>(null);
 export const boilerplateCodesAtom = atom<Map<number, BoilerplateCode> | null>(null);
+export const currentDsaAttemptIdAtom = atom<string | null>(null);
+export const showPostQuestionSubmitModalAtom = atom(false);

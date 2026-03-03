@@ -27,7 +27,7 @@ impl LeaderboardService {
         Ok(())
     }   
 
-    pub async fn update_score(&self, contest_id: Uuid, user_id: Uuid, delta_score: i16) -> anyhow::Result<()> {
+    pub async fn update_score(&self, contest_id: Uuid, user_id: Uuid, delta_score: i32) -> anyhow::Result<()> {
         let mut redis_conn = self.redis.clone();
 
         redis_conn.zincr(contest_id.to_string(), user_id.to_string(), delta_score).await?;
@@ -38,18 +38,32 @@ impl LeaderboardService {
     pub async fn get_user_rank(&self, contest_id: Uuid, user_id: Uuid) -> anyhow::Result<i32> {
         let mut redis_conn = self.redis.clone();
 
-        let rank_option = redis_conn.zrevrank(contest_id.to_string(), user_id.to_string()).await?;
-        if rank_option.is_some() {
-            return Ok(rank_option.unwrap() as i32);
+        let rank_score_result: Result<(i32, String), redis::RedisError> = redis::cmd("ZREVRANK")
+            .arg(contest_id.to_string())
+            .arg(user_id.to_string())
+            .arg("WITHSCORE")
+            .query_async(&mut redis_conn)
+        .await?;    
+
+        if let Err(e) = rank_score_result {
+            return Err(anyhow!(e));
         }
 
-        return Err(anyhow!("User does not exit in leaderboard"));
+        let (rank, score) = rank_score_result.unwrap();
+        
+        if rank == 0 {
+            if score == "0" {
+                return Ok(-1);
+            }
+        }
+
+        return Ok(rank + 1);
     }
 
     pub async fn publish_leaderboard_to_db(&self, contest_id: Uuid) -> anyhow::Result<()> {
         let mut redis_conn = self.redis.clone();
 
-        let leaderboard: Vec<(String, f64)> = redis::cmd("ZREVRANGE")
+        let leaderboard: Vec<(String, i32)> = redis::cmd("ZREVRANGE")
             .arg(contest_id.to_string())
             .arg(0)
             .arg(-1)
@@ -57,11 +71,11 @@ impl LeaderboardService {
             .query_async(&mut redis_conn)
         .await?;
         
-        let user_id_scores: Vec<(Uuid, i16)> = leaderboard.iter().map(
+        let user_id_scores: Vec<(Uuid, i32)> = leaderboard.iter().map(
             |l| 
                 (
                     Uuid::from_str(&l.0).unwrap(),
-                    l.1 as i16
+                    l.1
                 )   
         ).collect();
 

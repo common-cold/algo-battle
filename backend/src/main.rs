@@ -4,7 +4,7 @@ use db::Database;
 use leaderboard::LeaderboardService;
 use redis_service::RedisConnection;
 
-use crate::{routes::{create_contest, create_question, create_user, get_all_boilerplate_codes, get_all_contests, get_all_dsa_questions, get_all_examiner_contests, get_all_examiner_mcq_questions, get_contest_joined_at, get_full_contest_by_id, get_questions_by_id, join_contest, signin, submit_mcq_question}, service::cron_task};
+use crate::{routes::{create_contest, create_question, create_user, evaluate_dsa_question, get_active_attempt_id, get_all_boilerplate_codes, get_all_contests, get_all_dsa_questions, get_all_examiner_contests, get_all_examiner_mcq_questions, get_contest_joined_at, get_full_contest_by_id, get_judge0_submission_status, get_leaderboard, get_questions_by_id, get_submission, join_contest, judge0_submission_callback, signin, submit_dsa_question, submit_mcq_question}, service::cron_task};
 
 mod routes;
 mod service;
@@ -59,6 +59,13 @@ async fn main() -> std::io::Result<()> {
             .service(get_contest_joined_at)
             .service(submit_mcq_question)
             .service(get_all_boilerplate_codes)
+            .service(evaluate_dsa_question)
+            .service(judge0_submission_callback)
+            .service(get_judge0_submission_status)
+            .service(get_active_attempt_id)
+            .service(submit_dsa_question)
+            .service(get_submission)
+            .service(get_leaderboard)
     })
     .bind(("127.0.0.1", 8080))?
     .run()

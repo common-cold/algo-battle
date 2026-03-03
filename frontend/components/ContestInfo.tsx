@@ -31,6 +31,10 @@ export function ContestInfo({contestId, contestName, startTime, status} : Contes
         }
     }
 
+    function redirectToLeaderboard(contestId: string) {
+        router.push(`/leaderboard/${contestId}`);
+    }
+
     return <div className="flex justify-between contestRow text-[18px] px-5 py-3 hover:!bg-[#1F2433]">
         <div className="textColor">
             {contestName}
@@ -55,7 +59,9 @@ export function ContestInfo({contestId, contestName, startTime, status} : Contes
                     (
                         status == "Closed"
                         ?
-                        <div className="button2 px-3 font-medium">
+                        <div 
+                            onClick={() => redirectToLeaderboard(contestId)}
+                            className="button2 px-3 font-medium">
                             View Leaderboard
                         </div>
                         :

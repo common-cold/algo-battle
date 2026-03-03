@@ -46,3 +46,22 @@ export interface BoilerplateCode {
     full_code: string,
     created_at: number
 }
+
+export interface Submission {
+    id: string,
+    contest_id: string,
+    question_id: string,
+    user_id: string,
+    points_earned: number,
+    created_at: number
+}
+
+export interface LeaderboardRow {
+    contest_id: string,
+    user_id: string,
+    score: number,
+    rank: number,
+    name: string
+}
+
+export type Leaderboard = Array<LeaderboardRow>

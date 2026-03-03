@@ -8,5 +8,5 @@ CREATE TABLE MCQ_QUESTIONS (
     options TEXT[] NOT NULL,
     correct_option SMALLINT NOT NULL,
     time_limit BIGINT NOT NULL,
-    points SMALLINT NOT NULL
+    points INTEGER NOT NULL
 )

@@ -52,7 +52,7 @@ pub async fn get_full_contest(db: &Database, contest_id: Uuid) -> anyhow::Result
 
 
 pub async fn cron_task(db: &Database) {
-    let mut interval = interval(Duration::from_mins(1));
+    let mut interval = interval(Duration::from_secs(10));
 
     println!("INIT CRON");
     loop {

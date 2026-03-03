@@ -1,7 +1,7 @@
 use std::env;
 
 use anyhow::Ok;
-use common::{BoilerplateCode, Contest, ContestStatus, CreateBulkBoilerPlateCodeArgs, CreateBulkTestCasesArgs, CreateContestArgs, CreateDsaQuestionArgs, CreateDsaSubmissionArgs, CreateMcqQuestionArgs, CreateUserArgs, DsaQuestion, GetContestArgs, McqQuestion, Question, QuestionType, QuestionWithoutAnswer, Role, UpdateContestArgs, User};
+use common::{BoilerplateCode, Contest, ContestStatus, CreateBulkBoilerPlateCodeArgs, CreateBulkTestCasesArgs, CreateContestArgs, CreateDsaQuestionArgs, CreateDsaSubmissionArgs, CreateMcqQuestionArgs, CreateSubmissionArgs, CreateUserArgs, DsaQuestion, GetContestArgs, Judge0Submission, LeaderboardRow, McqQuestion, Question, QuestionType, QuestionWithoutAnswer, Role, Submission, TestCase, UpdateContestArgs, User};
 use sqlx::{Pool, Postgres, QueryBuilder, postgres::PgPoolOptions, types::Uuid};
 use dotenv::dotenv;
 
@@ -122,7 +122,6 @@ impl Database {
         Ok(question)
     }
 
-
     pub async fn create_mcq_question(&self, args: CreateMcqQuestionArgs, question_id: Uuid) -> anyhow::Result<McqQuestion> {
         let question = sqlx::query_as!(
             McqQuestion,
@@ -225,7 +224,8 @@ impl Database {
                     NULL::text as testcase_input,
                     NULL::text as testcase_output
                 FROM MCQ_QUESTIONS WHERE
-                   id = ANY($1)     
+                   id = ANY($1)
+                   ORDER BY array_position($1, id)     
             "#,
             &question_ids
         ).fetch_all(&self.pool)
@@ -249,7 +249,8 @@ impl Database {
                     testcase_input,
                     testcase_output
                 FROM DSA_QUESTIONS WHERE
-                   id = ANY($1)     
+                   id = ANY($1) 
+                   ORDER BY array_position($1, id)    
             "#,
             &question_ids
         ).fetch_all(&self.pool)
@@ -258,7 +259,7 @@ impl Database {
         Ok(questions)
     }
 
-    pub async fn get_correct_option_and_points(&self, question_id: Uuid) -> anyhow::Result<(i16, i16)> {
+    pub async fn get_correct_option_and_points(&self, question_id: Uuid) -> anyhow::Result<(i16, i32)> {
         let record = sqlx::query!(
             r#"
                 SELECT 
@@ -552,18 +553,17 @@ impl Database {
 
 
     //leaderboard
-
-    pub async fn add_leaderboard(&self, contest_id: Uuid, user_id_scores: Vec<(Uuid, i16)>) -> anyhow::Result<()> {
+    pub async fn add_leaderboard(&self, contest_id: Uuid, user_id_scores: Vec<(Uuid, i32)>) -> anyhow::Result<()> {
         let mut user_ids = Vec::<Uuid>::new();
-        let mut scores = Vec::<i16>::new();
-        let mut ranks = Vec::<i16>::new();
+        let mut scores = Vec::<i32>::new();
+        let mut ranks = Vec::<i32>::new();
 
         let mut txn = self.pool.begin().await?;
 
         for (rank, (user_id, score)) in user_id_scores.iter().enumerate() {
             user_ids.push(*user_id);
             scores.push(*score);
-            ranks.push(rank as i16 + 1);
+            ranks.push(rank as i32 + 1);
         }
         
         sqlx::query!(
@@ -581,8 +581,8 @@ impl Database {
                     rank
                 FROM UNNEST (
                     $2::uuid[],
-                    $3::int2[],
-                    $4::int2[]
+                    $3::int4[],
+                    $4::int4[]
                 ) AS t (user_id, score, rank)
             "#,
             contest_id,
@@ -595,6 +595,28 @@ impl Database {
         txn.commit().await?;
         
         Ok(())
+    }
+
+    pub async fn get_leaderboard(&self, contest_id: Uuid) -> anyhow::Result<Vec<LeaderboardRow>> {
+        let leaderboard = sqlx::query_as!(
+            LeaderboardRow,
+            r#"
+                SELECT 
+                    l.contest_id,
+                    l.user_id,
+                    l.score,
+                    l.rank,
+                    u.name
+                FROM LEADERBOARD l
+                JOIN USERS u ON l.user_id = u.id
+                WHERE contest_id = $1
+                ORDER BY l.rank ASC
+            "#,
+            contest_id
+        ).fetch_all(&self.pool)
+        .await?;
+
+        Ok(leaderboard)
     }
 
 
@@ -658,6 +680,32 @@ impl Database {
         Ok(boilerplate_codes)
     }
 
+    pub async fn get_boilerplate_code_for_language_id(&self, question_id: Uuid, language_id: i16) -> anyhow::Result<BoilerplateCode> { 
+        let boilerplate_codes =  sqlx::query_as!(
+            BoilerplateCode,
+            r#"
+                SELECT
+                    id,
+                    problem_id,  
+                    language_id, 
+                    partial_code,
+                    full_code,
+                    created_at
+                FROM BOILERPLATE_CODES 
+                WHERE
+                    problem_id = $1
+                AND
+                    language_id = $2
+            "#,
+            question_id,
+            language_id
+        )
+        .fetch_one(&self.pool)
+        .await?;
+
+        Ok(boilerplate_codes)
+    }
+
 
 
     //test cases
@@ -693,21 +741,69 @@ impl Database {
     
     }
 
+    pub async fn get_all_testcases_for_question(&self, question_id: Uuid) -> anyhow::Result<Vec<TestCase>> {
+        let testcases = sqlx::query_as!(
+            TestCase,
+            r#"
+                SELECT
+                    id,
+                    problem_id,
+                    input,
+                    output,
+                    created_at
+                FROM TEST_CASES
+                WHERE problem_id = $1
+            "#,
+            question_id
+        )
+        .fetch_all(&self.pool)
+        .await?;
 
-    //submission
+        Ok(testcases)
+    }
+
+    pub async fn get_testcase_by_id(&self, testcase_id: Uuid) -> anyhow::Result<TestCase> {
+        let testcase = sqlx::query_as!(
+            TestCase,
+            r#"
+                SELECT
+                    id,
+                    problem_id,
+                    input,
+                    output,
+                    created_at
+                FROM TEST_CASES
+                WHERE id = $1
+            "#,
+            testcase_id
+        )
+        .fetch_one(&self.pool)
+        .await?;
+
+        Ok(testcase)
+    }
+
+
+    //judge0 submissions
     pub async fn create_dsa_submission(&self, args: CreateDsaSubmissionArgs) -> anyhow::Result<()> {    
         sqlx::query!(
             r#"
-                INSERT INTO SUBMISSIONS (
+                INSERT INTO JUDGE0_SUBMISSIONS (
+                    attempt_id,
+                    submission_id,
                     problem_id,  
                     contest_id, 
+                    testcase_id,
                     user_id,
                     status
                 )
-                VALUES ($1, $2, $3, $4)
+                VALUES ($1, $2, $3, $4, $5, $6, $7)
             "#,
+            args.attempt_id,
+            args.submission_id,
             args.problem_id,
             args.contest_id,
+            args.testcase_id,
             args.user_id,
             args.status
         )
@@ -715,5 +811,125 @@ impl Database {
         .await?;
         
         Ok(())
+    }
+
+    pub async fn get_dsa_submission_by_submission_id(&self, submission_id: String) -> anyhow::Result<Judge0Submission> {
+        let submission = sqlx::query_as!(
+            Judge0Submission,
+            r#"
+                SELECT *
+                FROM JUDGE0_SUBMISSIONS
+                WHERE 
+                    submission_id = $1
+            "#,
+            submission_id
+        )
+        .fetch_one(&self.pool)
+        .await?;
+        
+        Ok(submission)
+    }
+
+    pub async fn get_dsa_submissions_by_attempt_id(&self, attempt_id: String) -> anyhow::Result<Vec<Judge0Submission>> {
+        let submissions = sqlx::query_as!(
+            Judge0Submission,
+            r#"
+                SELECT *
+                FROM JUDGE0_SUBMISSIONS
+                WHERE 
+                    attempt_id = $1
+            "#,
+            attempt_id
+        )
+        .fetch_all(&self.pool)
+        .await?;
+        
+        Ok(submissions)
+    }
+
+    pub async fn update_dsa_submission_by_submission_id(&self, submission_id: String, status: String, compile_result: Option<String>) -> anyhow::Result<()> {    
+        sqlx::query!(
+            r#"
+                UPDATE JUDGE0_SUBMISSIONS
+                SET 
+                    status = $1,
+                    compile_result = COALESCE($2, compile_result)
+                WHERE submission_id = $3
+            "#,
+            status,
+            compile_result,
+            submission_id
+        )
+        .execute(&self.pool)
+        .await?;
+        
+        Ok(())
+    }
+
+    pub async fn get_active_attempt_id(&self, user_id: Uuid, contest_id: Uuid, problem_id: Uuid) -> anyhow::Result<Option<String>> {
+        let record = sqlx::query!(
+            r#"
+                SELECT attempt_id
+                FROM JUDGE0_SUBMISSIONS
+                WHERE
+                    user_id = $1
+                    AND contest_id = $2
+                    AND problem_id = $3
+                    AND status = 'Pending'
+            "#,
+            user_id,
+            contest_id,
+            problem_id
+        )
+        .fetch_optional(&self.pool)
+        .await?;
+
+        if record.is_none() {
+            return Ok(None);
+        }
+
+        Ok(Some(record.unwrap().attempt_id))
+    }
+
+
+    //submissions
+    pub async fn create_submission(&self, args: CreateSubmissionArgs) -> anyhow::Result<()> {
+        sqlx::query!(
+            r#"
+                INSERT INTO SUBMISSIONS (
+                    contest_id,
+                    question_id,
+                    user_id,
+                    points_earned
+                )
+                VALUES ($1, $2, $3, $4)
+            "#,
+            args.contest_id,
+            args.question_id,
+            args.user_id,
+            args.points_earned
+        ).execute(&self.pool)
+        .await?;
+
+        Ok(())
+    }
+
+    pub async fn get_submission(&self, contest_id: Uuid, question_id: Uuid, user_id: Uuid) -> anyhow::Result<Option<Submission>> {
+        let submission = sqlx::query_as!(
+            Submission,
+            r#"
+                SELECT *
+                FROM SUBMISSIONS 
+                WHERE contest_id = $1
+                AND question_id = $2
+                AND user_id = $3
+            "#,
+            contest_id,
+            question_id,
+            user_id
+        ).fetch_optional(&self.pool)
+        .await?;
+
+        Ok(submission)
     }
 }
