@@ -1,6 +1,6 @@
 import { Contest, ContestStatus, Question, QuestionType, Role, Submission } from "./db"
 
-export const API_BASE_URL = 'https://algo-battle.prajjwalk.com:8080';
+export const API_BASE_URL = 'https://algo-battle.prajjwalk.com';
 export const WS_BASE_URL = 'wss://algo-battle.prajjwalk.com/ws';
 
 export interface SignupArgs {
