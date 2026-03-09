@@ -157,7 +157,7 @@ pub async fn main() -> Result<()> {
         .app_data(Data::new(state.clone()))
             .service(ws_handler)
     })
-    .bind(("127.0.0.1", 8081))?
+    .bind(("127.0.0.1", 8083))?
     .run()
     .await?;
 
