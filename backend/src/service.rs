@@ -16,7 +16,7 @@ pub async fn init_ws_connection() -> anyhow::Result<WebSocketStream<MaybeTlsStre
         return Err(anyhow!("x-api-key is missing"));
     }
 
-    let mut request = "ws://localhost:8081/ws".into_client_request()?;
+    let mut request = "ws://localhost:8083/ws".into_client_request()?;
     request.headers_mut()
         .insert("x-api-key", x_api_key_result.unwrap().parse()?);
     
