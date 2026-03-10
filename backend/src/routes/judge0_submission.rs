@@ -1,4 +1,4 @@
-use actix_web::{HttpResponse, get, post, web::{self, Data, Json}};
+use actix_web::{HttpResponse, get, post, put, web::{self, Data, Json}};
 use common::{CompactTestcase, FetchAttemptIdArgs, Judge0SubmissionCallBackArgs, JwtClaims, SubmissionStatusResponse};
 use serde_json::json;
 
@@ -6,7 +6,7 @@ use crate::{AppData};
 
 
 
-#[post("/judge0-submission/callback")]
+#[put("/judge0-submission/callback")]
 pub async fn judge0_submission_callback(data: Data<AppData>, body: web::Json<Judge0SubmissionCallBackArgs>) -> HttpResponse {
     println!("Callback Hit");
     let db = &data.db;
