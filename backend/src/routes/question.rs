@@ -206,6 +206,9 @@ pub async fn submit_dsa_question(app_data: Data<AppData>, body: web::Json<Submit
         }
     }
 
+    println!("Total: {}", total);
+    println!("Passed: {}", passed);
+
     let ratio = if total > 0 {
         passed as f32 / total as f32
     } else {
