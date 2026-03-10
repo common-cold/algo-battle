@@ -78,7 +78,7 @@ pub async fn ws_handler(request: HttpRequest, body: Payload, state: Data<WsData>
                                     let _ = session.text(log).await;
                                     continue;
                                 }    
-                                if let Err(e) = leaderboard_service.add_user_to_leaderboard(args.contest_id, user_id.unwrap()).await {
+                                if let Err(e) = leaderboard_service.add_user_to_leaderboard_if_not_exists(args.contest_id, user_id.unwrap()).await {
                                     let log = prepare_log(e.to_string(), true);
                                     let _ = session.text(log).await;
                                 }

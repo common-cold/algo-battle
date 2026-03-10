@@ -8,7 +8,6 @@ use crate::{AppData};
 
 #[put("/judge0-submission/callback")]
 pub async fn judge0_submission_callback(data: Data<AppData>, body: web::Json<Judge0SubmissionCallBackArgs>) -> HttpResponse {
-    println!("Callback Hit");
     let db = &data.db;
 
     let submission_result = db.get_dsa_submission_by_submission_id(body.token.clone()).await;

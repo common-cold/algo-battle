@@ -19,11 +19,14 @@ impl LeaderboardService {
         }
     }
 
-    pub async fn add_user_to_leaderboard(&self, contest_id: Uuid, user_id: Uuid) -> anyhow::Result<()> {
+    pub async fn add_user_to_leaderboard_if_not_exists(&self, contest_id: Uuid, user_id: Uuid) -> anyhow::Result<()> {
         let mut redis_conn = self.redis.clone();
 
-        redis_conn.zadd(contest_id.to_string(), user_id.to_string(), 0).await?;
-        
+        let score = redis_conn.zscore(contest_id.to_string(), user_id.to_string()).await?;
+        if score.is_none() {
+            redis_conn.zadd(contest_id.to_string(), user_id.to_string(), 0).await?;
+        }
+
         Ok(())
     }   
 
