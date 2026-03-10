@@ -11,7 +11,7 @@ use crate::contest_manager::{ContestManager};
 
 
 pub async fn broadcast_next_question_task(db: &Database, contest_manager: Arc<Mutex<ContestManager>>, leaderboard_service: LeaderboardService) {
-    let mut interval = interval(Duration::from_secs(30));
+    let mut interval = interval(Duration::from_secs(10));
 
     loop {
         interval.tick().await;
