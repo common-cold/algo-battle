@@ -23,7 +23,7 @@ export default function QuestionInfoList({questionList, showAttemptButton}: Ques
                             id={q.id}
                             title={q.title}
                             timeLimit={q.time_limit}
-                            points={q.points}
+                            points={q.points / 100}
                             showAttemptButton={showAttemptButton}
                         />
                     </div>

@@ -53,10 +53,7 @@ pub async fn get_full_contest(db: &Database, contest_id: Uuid) -> anyhow::Result
 
 pub async fn cron_task(db: &Database) {
     let mut interval = interval(Duration::from_secs(10));
-
-    println!("INIT CRON");
     loop {
-        println!("CRON LOOP START");
         interval.tick().await;
 
         let connection_result = init_ws_connection().await;
@@ -124,6 +121,5 @@ pub async fn cron_task(db: &Database) {
                 }
             }
         }
-        println!("CRON LOOP END");
     }
 }

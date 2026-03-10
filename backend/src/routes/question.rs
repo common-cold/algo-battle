@@ -276,14 +276,14 @@ pub async fn evaluate_dsa_question(app_data: Data<AppData>, body: web::Json<Eval
             language_id: body.language_id,
             stdin: testcase.input,
             expected_output: testcase.output,
-            callback_url: String::from("https://play.svix.com/in/e_FVluheAePmTM1sknEt44IclsmrY/")
+            callback_url: String::from("http://localhost:8082/judge0-submission/callback")
         };
         batch_submisison_dto.push(dto);
         testcase_id_list.push(testcase.id);
     };
 
     let client = reqwest::Client::new();
-    let url = String::from("http://65.2.180.59:2358/submissions/batch?base64_encoded=false");
+    let url = String::from("http://localhost:2358/submissions/batch?base64_encoded=false");
 
     let response = client
         .post(url)
