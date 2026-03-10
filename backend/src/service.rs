@@ -81,7 +81,6 @@ pub async fn cron_task(db: &Database) {
         }
 
         if contest_ids_to_update.len() == 0 {
-            println!("No active contests found");
             continue;
         }
 
