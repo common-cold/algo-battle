@@ -276,7 +276,7 @@ pub async fn evaluate_dsa_question(app_data: Data<AppData>, body: web::Json<Eval
             language_id: body.language_id,
             stdin: testcase.input,
             expected_output: testcase.output,
-            callback_url: String::from("http://172.17.0.1:8082/judge0-submission/callback")
+            callback_url: String::from("https://play.svix.com/in/e_fIcQTkwpdR912nN9UZ0vhvTEdrV/")
         };
         batch_submisison_dto.push(dto);
         testcase_id_list.push(testcase.id);
