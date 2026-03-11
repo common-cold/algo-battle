@@ -54,7 +54,7 @@ impl ContestManager {
                 end_date: contest.end_date,
                 question_ids: question_ids,
                 question_times: question_times,
-                current_question_id: None,         //after syncing the broadcast_next_question_task runs immediately which updates this
+                current_question_id: None,         //after syncing, the broadcast_next_question_task runs immediately which updates this
                 current_question_time_left: None   //same as above
             };
 

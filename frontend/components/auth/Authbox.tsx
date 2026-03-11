@@ -39,7 +39,7 @@ export function AuthBoxInputs({name, argsTupleArray, handleSubmit, isSignUp, set
                 <select className="bg-[#161B26] px-2 py-2 items-center justify-center rounded-[7px] inputBox2"        
                     onChange={(e) => setRole!(e.target.value as Role)} defaultValue="Candidate">
                     <option value="Candidate">Candidate</option>
-                    <option value="Examiner">Examiner</option>
+                    {/* <option value="Examiner">Examiner</option> */}
                 </select>
             </div>
         }
